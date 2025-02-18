@@ -7,7 +7,7 @@ from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 from parser import config
 from parser.chain import create_chain
-from parser.vectore_store import create_vector_store
+from parser.vectore_store import VectorStore
 
 set_verbose(False)
 set_debug(False)
@@ -16,7 +16,7 @@ set_debug(False)
 local_embeddings = OllamaEmbeddings(model=config.EMBEDDINGS_MODEL)
 
 # Create the vector store
-vector_store = create_vector_store(config.TEST_LOG_PATH, config.CHROMA_PERSIST_DIR, local_embeddings)
+vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
 
 # Create the parser model
 parser_model = ChatOllama(model=config.PARSER_MODEL, temperature=config.PARSER_TEMPERATURE)
@@ -47,28 +47,20 @@ def get_template(log: str) -> str:
         str: The identified template for the given log.
 
     """
-    similarity_question = f'Which logs are most similar to "{log}"?'
-
     # Check if there are very similar logs
     # Assumption: the returned documents are sorted by most relevant first
-    very_similar_logs = vector_store.similarity_search_with_relevance_scores(
-        similarity_question,
-        score_threshold=0.7,
-        k=10,
-        filter={"template": {"$ne": ""}},
-    )
+    very_similar_logs = vector_store.find_very_similar_logs_with_template(log)
 
     # If there are very similar logs,
     # check if their template matches with the current log
     if len(very_similar_logs) > 0:
         for similar_log in very_similar_logs:
-            if re.match(similar_log[0].metadata["template"], log):
-                return similar_log[0].metadata["template"]
+            if re.match(similar_log.metadata["template"], log):
+                return similar_log.metadata["template"]
 
     # If there are no very similar logs or their template doesn't match,
     # find sufficiently similar logs
-    similar_logs = vector_store.similarity_search_with_relevance_scores(similarity_question, k=5, score_threshold=0.5)
-    similar_logs = [log[0] for log in similar_logs]
+    similar_logs = vector_store.find_similar_logs(log)
 
     # Perform self-reflection to verify that the template
     # matches both the current and similar logs
@@ -97,10 +89,10 @@ def get_template(log: str) -> str:
     # Update the template metadata value for the similar logs
     for similar_log in similar_logs:
         similar_log.metadata["template"] = template_regex
-        vector_store.update_document(document_id=similar_log.id, document=similar_log)
+        vector_store.update_document(similar_log)
 
     # Save the new logs to the vector store
-    vector_store.add_documents([Document(id=uuid.uuid4(), page_content=log, metadata={"template": template_regex})])
+    vector_store.add_document(Document(id=uuid.uuid4(), page_content=log, metadata={"template": template_regex}))
 
     return template_regex
 
