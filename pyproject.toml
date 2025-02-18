@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "parser-rag-embed"
+version = "0.1.0"
+description = ""
+authors = ["Luca Cotti <lucacotti@outlook.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+ollama = "^0.4.7"
+langchain-ollama = "^0.2.3"
+langchain-chroma = "^0.2.2"
+langchain = "^0.3.18"
+langchain-community = "^0.3.17"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+select = [
+    "ALL", # include all the rules, including new ones
+]
+ignore = [
+    "D100",   # ignore missing docs
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    "D200",
+    "D205",
+    "D212",
+    "D400",
+    "D401",
+    "D415",
+    "E402",   # false positives for local imports
+    "E501",   # line too long
+    "TRY003", # external messages in exceptions are too verbose
+    "TD002",
+    "TD003",
+    "FIX002", # too verbose descriptions of todos
+]
