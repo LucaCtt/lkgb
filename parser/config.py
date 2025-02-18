@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/with_template.csv")
+TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/hadoop_2k.csv")
 
 # The path to the dir where the chroma database should be stored
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
