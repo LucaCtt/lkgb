@@ -31,7 +31,7 @@ prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You will be provided with a list of logs. You must identify and abstract all the dynamic variables in logs with '<*>' and output ONE static log template that matches all the logs. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.  Print the input logs' template delimited by backticks.",
+            "You will be provided with a list of logs. You must identify and abstract all the dynamic variables in logs with '<*>' and output ONE static log template that matches all the logs. Datetimes and ip addresses should each be abstracted as a standalone '<*>'. Output just the input logs' template, without any other text",
         ),
         (
             "human",

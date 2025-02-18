@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "parser-rag-embed"
+name = "parser"
 version = "0.1.0"
 description = ""
 authors = ["Luca Cotti <lucacotti@outlook.com>"]

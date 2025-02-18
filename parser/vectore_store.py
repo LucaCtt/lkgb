@@ -1,15 +1,16 @@
 from chromadb import Embeddings
-from langchain.document_loaders import CSVLoader
 from langchain_chroma import Chroma
+from langchain_community.document_loaders import CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
-def create_vector_store(logs_path: str, embeddings_model: Embeddings) -> Chroma:
+def create_vector_store(logs_path: str, persist_dir: str, embeddings_model: Embeddings) -> Chroma:
     """
     Creates a vector store from log data using the specified embeddings model.
 
     Args:
         logs_path (str): The file path to the CSV file containing the logs.
+        persist_dir (str): The directory where the vector store should be persisted.
         embeddings_model (Embeddings): The embeddings model to use for creating the vector store.
 
     Returns:
@@ -30,6 +31,7 @@ def create_vector_store(logs_path: str, embeddings_model: Embeddings) -> Chroma:
     # Create the vector store
     return Chroma.from_documents(
         documents=all_splits,
+        persist_directory=persist_dir,
         embedding=embeddings_model,
         collection_metadata={"hnsw:space": "cosine"},
     )

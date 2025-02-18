@@ -1,11 +1,11 @@
 import re
 import uuid
 
-import config
 from langchain_core.documents import Document
 from langchain_core.globals import set_debug, set_verbose
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
+from parser import config
 from parser.chain import create_chain
 from parser.vectore_store import create_vector_store
 
@@ -16,12 +16,22 @@ set_debug(False)
 local_embeddings = OllamaEmbeddings(model=config.EMBEDDINGS_MODEL)
 
 # Create the vector store
-vector_store = create_vector_store(config.TEST_LOG_PATH, local_embeddings)
+vector_store = create_vector_store(config.TEST_LOG_PATH, config.CHROMA_PERSIST_DIR, local_embeddings)
 
 # Create the parser model
 parser_model = ChatOllama(model=config.PARSER_MODEL, temperature=config.PARSER_TEMPERATURE)
 
 chain = create_chain(parser_model)
+
+
+def template_to_regex(template: str) -> str:
+    regex = template.replace("<*>", "(.*?)").strip()
+
+    # Remove the quotes from the regex if they exist
+    regex = regex.removeprefix("'").removesuffix("'")
+
+    # Remove any extra spaces from the regex
+    return regex.strip()
 
 
 def get_template(log: str) -> str:
@@ -70,16 +80,15 @@ def get_template(log: str) -> str:
         # Find the template using the current log and the similar logs
         template = chain.invoke({"input_log": log, "similar_logs": similar_logs})
 
-        # Replace all of the <*> in the template with (.*?)
-        template = template.replace("<*>", "(.*?)")
+        template_regex = template_to_regex(template)
 
         # Check that the current log matches the template
-        if not re.match(template, log):
+        if not re.match(template_regex, log):
             continue
 
         # Check that all the similar logs match the template
         for similar_log in similar_logs:
-            if not re.match(template, similar_log.page_content):
+            if not re.match(template_regex, similar_log.page_content):
                 continue
 
         # If the template matches all the logs, stop the self-reflection loop
@@ -87,14 +96,16 @@ def get_template(log: str) -> str:
 
     # Update the template metadata value for the similar logs
     for similar_log in similar_logs:
-        similar_log.metadata["template"] = template
+        similar_log.metadata["template"] = template_regex
         vector_store.update_document(document_id=similar_log.id, document=similar_log)
 
     # Save the new logs to the vector store
-    vector_store.add_documents([Document(id=uuid.uuid4(), page_content=log, metadata={"template": template})])
+    vector_store.add_documents([Document(id=uuid.uuid4(), page_content=log, metadata={"template": template_regex})])
 
-    return template
+    return template_regex
 
 
 if __name__ == "__main__":
-    get_template("2022-01-21 01:04:19 jhall/192.168.230.165:46011 peer info: IV_TCPNL=1")
+    template = get_template("2022-01-21 01:04:19 jhall/192.168.230.165:46011 peer info: IV_TCPNL=1")
+
+    print(template)
