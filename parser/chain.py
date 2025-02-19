@@ -21,7 +21,7 @@ def format_logs_for_prompt(log: str, similar_logs: list[Document]) -> str:
 
     """
     # Cut the "text: " prefix from the page content of each log
-    all_logs = [log, *[similar_log.page_content[len("text: ") :] for similar_log in similar_logs]]
+    all_logs = [log, *[similar_log.page_content for similar_log in similar_logs]]
     all_logs = [f'"{log}"' for log in all_logs]
 
     return "[" + ", ".join(all_logs) + "]"

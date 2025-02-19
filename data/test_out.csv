@@ -1,0 +1,40 @@
+text,template
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 TLS: soft reset sec=3308/3308 bytes=45748/-1 pkts=649/0,(.*?) (.*?) TLS: soft reset sec=<*/>, bytes=<*-/> pkts=<*/>.
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 VERIFY OK: depth=1, C=AT, ST=Vienna, L=Vienna, O=Some Organisation GmbH, CN=OpenVPN CA, emailAddress=admin@organisation.cyberrange.at,(.*?) (.*?):(.*?), (.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 VERIFY KU OK,(.*?) (.*?):(.*?), (.*?)
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Validating certificate extended key usage,(.*?) (.*?):(.*?) ++ Certificate has EKU (str) TLS Web Client Authentication, expects TLS Web Client Authentication
+(.*?) (.*?):(.*?) Control Channel: (.*?), cipher (.*?), peer certificate: (.*?), signature: (.*?)
+(.*?) (.*?):(.*?) VERIFY EKU OK
+(.*?) (.*?):(.*?) Validating certificate extended key usage
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 ++ Certificate has EKU (str) TLS Web Client Authentication, expects TLS Web Client Authentication,(.*?) (.*?)/(.*?):<> VERIFY (.*?) OK
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 VERIFY EKU OK,(.*?) (.*?):(.*?), (.*?)
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 VERIFY OK: depth=0, CN=jhall,(.*?) (.*?):(.*?), (.*?)
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_VER=2.4.4,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_PLAT=linux,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_PROTO=2,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_LZ4=1,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?)
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_LZ4v2=1,(.*?) (.*?):(.*?), (.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_LZO=1,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_COMP_STUB=1,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_COMP_STUBv2=1,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?)
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 peer info: IV_TCPNL=1,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Outgoing Data Channel: Cipher 'AES-256-CBC' initialized with 256 bit key,(.*?) (.*?)/(.*?) Validating certificate extended key usage
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Outgoing Data Channel: Using 160 bit message hash 'SHA1' for HMAC authentication,(.*?) (.*?):(.*?) (.*?), (.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Incoming Data Channel: Cipher 'AES-256-CBC' initialized with 256 bit key,(.*?) (.*?)/(.*?) Validating certificate extended key usage
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Incoming Data Channel: Using 160 bit message hash 'SHA1' for HMAC authentication,(.*?) (.*?):(.*?) (.*?), (.*?).
+2022-01-21 00:09:11 jhall/192.168.230.165:46011 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, peer certificate: 4096 bit RSA, signature: RSA-SHA256,(.*?) (.*?):(.*?) ++ Certificate has EKU (str) TLS Web Client Authentication, expects TLS Web Client Authentication
+(.*?) (.*?):(.*?) Control Channel: (.*?), cipher (.*?), peer certificate: (.*?), signature: (.*?)
+(.*?) (.*?):(.*?) VERIFY EKU OK
+(.*?) (.*?):(.*?) Validating certificate extended key usage
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 TLS: soft reset sec=3308/3308 bytes=55900/-1 pkts=687/0,(.*?) (.*?)/(.*?) (.*?), (.*?).
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 VERIFY OK: depth=1, C=AT, ST=Vienna, L=Vienna, O=Some Organisation GmbH, CN=OpenVPN CA, emailAddress=admin@organisation.cyberrange.at,(.*?) (.*?):(.*?), (.*?).
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 VERIFY KU OK,(.*?) (.*?)/(.*?):<> VERIFY (.*?) OK
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 Validating certificate extended key usage,(.*?) (.*?):(.*?) ++ Certificate has EKU (str) TLS Web Client Authentication, expects TLS Web Client Authentication
+(.*?) (.*?):(.*?) Control Channel: (.*?), cipher (.*?), peer certificate: (.*?), signature: (.*?)
+(.*?) (.*?):(.*?) VERIFY EKU OK
+(.*?) (.*?):(.*?) Validating certificate extended key usage
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 ++ Certificate has EKU (str) TLS Web Client Authentication, expects TLS Web Client Authentication,(.*?) (.*?)/(.*?):<> VERIFY (.*?) OK
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 VERIFY EKU OK,(.*?) (.*?):(.*?), (.*?)
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 VERIFY OK: depth=0, CN=jhall,(.*?) (.*?):(.*?), (.*?)
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 peer info: IV_VER=2.4.4,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.
+2022-01-21 01:04:19 jhall/192.168.230.165:46011 peer info: IV_PLAT=linux,(.*?) (.*?):(.*?) peer info: (.*?)=(.*?),(.*?)=<*,(.*?)=(.*?),(.*?)=(.*?),(.*?)=<*.

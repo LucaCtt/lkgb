@@ -1,8 +1,13 @@
+import logging
+
+import pandas as pd
 from chromadb import Embeddings
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import CSVLoader
+from langchain_community.document_loaders import DataFrameLoader
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# Disable Chroma info logging
+logging.getLogger("langchain_chroma").propagate = False
 
 
 class VectorStore:
@@ -28,38 +33,29 @@ class VectorStore:
             embedding_function=embeddings_model,
             collection_metadata={"hnsw:space": "cosine"},
         )
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 
-    def load_csv(self, csv_path: str) -> None:
-        """
-        Loads data from a CSV file, splits the data into chunks, and adds the chunks to the store.
-
-        Args:
-            csv_path (str): The path to the CSV file to be loaded.
-
-        The CSV file is expected to have the following columns:
-            - line_number
-            - tactic
-            - techniques
-            - file_name
-            - template
-
-        The function performs the following steps:
-            1. Loads the CSV file using CSVLoader with specified metadata columns.
-            2. Splits the loaded data into chunks using the splitter.
-            3. Adds the chunks to the store.
-
-        """
-        loader = CSVLoader(
-            file_path=csv_path,
-            metadata_columns=["line_number", "tactic", "techniques", "file_name", "template"],
-        )
+    def load_df(self, df: pd.DataFrame):
+        loader = DataFrameLoader(data_frame=df, page_content_column="text")
         data = loader.load()
 
-        # Split the logs into chunks
-        all_splits = self.splitter.split_documents(data)
+        self.store.add_documents(data)
 
-        self.store.add_documents(all_splits)
+    def get_template(self, log: str) -> str | None:
+        """
+        Finds an exact match for the given log in the store.
+
+        Args:
+            log (str): The log string to find an exact match for.
+
+        Returns:
+            Document: A Document object that is an exact match for the given log.
+
+        """
+        match = self.store.get(where_document={"$contains": log})
+        if not match["documents"]:
+            return None
+
+        return match["metadatas"][0]["template"]
 
     def find_very_similar_logs_with_template(self, log: str) -> list[Document]:
         """
@@ -114,8 +110,7 @@ class VectorStore:
             document (Document): The document object to be added to the store.
 
         """
-        all_splits = self.splitter.split_documents([document])
-        self.store.add_documents(all_splits)
+        self.store.add_documents([document])
 
     def update_document(self, document: Document) -> None:
         """
@@ -126,6 +121,16 @@ class VectorStore:
 
         """
         self.store.update_document(document_id=document.id, document=document)
+
+    def get_documents_without_template(self) -> list[Document]:
+        """
+        Retrieves logs from the store that do not have a template.
+
+        Returns:
+            list[Document]: A list of Document objects that do not have a template.
+
+        """
+        return self.store.get(where={"template": {"$eq": ""}})["documents"]
 
     def __compose_similarity_question(self, log: str) -> str:
         return f'Which logs are most similar to "{log}"?'

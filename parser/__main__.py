@@ -1,9 +1,13 @@
 import re
+import shutil
 import uuid
+from pathlib import Path
 
+import pandas as pd
 from langchain_core.documents import Document
 from langchain_core.globals import set_debug, set_verbose
 from langchain_ollama import ChatOllama, OllamaEmbeddings
+from tqdm import tqdm
 
 from parser import config
 from parser.chain import create_chain
@@ -14,6 +18,10 @@ set_debug(False)
 
 # Load the embeddings model
 local_embeddings = OllamaEmbeddings(model=config.EMBEDDINGS_MODEL)
+
+
+if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
+    shutil.rmtree(config.CHROMA_PERSIST_DIR)
 
 # Create the vector store
 vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
@@ -34,17 +42,28 @@ def template_to_regex(template: str) -> str:
     return regex.strip()
 
 
-def get_template(log: str) -> str:
+def check_template_match(log: str, template: str) -> bool:
+    try:
+        return re.match(template, log) is not None
+    except re.error:
+        return False
+
+
+def check_all_templates_match(log: str, templates: list[str]) -> bool:
+    try:
+        return all(re.match(template, log) for template in templates)
+    except re.error:
+        return False
+
+
+def compute_template(log: str) -> None:
     """
-    Given a log, this function identifies and returns a template that matches the log.
+    Given a log, this function identifies and updates the template for the log and also for similar logs.
     It first searches for very similar logs in the vector store and checks if their templates match the current log.
     If no matching template is found, it searches for sufficiently similar logs and uses them to generate a template.
 
     Args:
         log (str): The log for which the template needs to be identified.
-
-    Returns:
-        str: The identified template for the given log.
 
     """
     # Check if there are very similar logs
@@ -53,10 +72,18 @@ def get_template(log: str) -> str:
 
     # If there are very similar logs,
     # check if their template matches with the current log
-    if len(very_similar_logs) > 0:
-        for similar_log in very_similar_logs:
-            if re.match(similar_log.metadata["template"], log):
-                return similar_log.metadata["template"]
+    if len(very_similar_logs) >= config.MEMORY_MATCH_MIN_QUALITY and check_all_templates_match(
+        log,
+        [similar.metadata["template"] for similar in very_similar_logs],
+    ):
+        vector_store.add_document(
+            Document(
+                id=uuid.uuid4(),
+                page_content=log,
+                metadata={"template": very_similar_logs[0].metadata["template"]},
+            ),
+        )
+        return
 
     # If there are no very similar logs or their template doesn't match,
     # find sufficiently similar logs
@@ -75,12 +102,12 @@ def get_template(log: str) -> str:
         template_regex = template_to_regex(template)
 
         # Check that the current log matches the template
-        if not re.match(template_regex, log):
+        if not check_template_match(log, template_regex):
             continue
 
         # Check that all the similar logs match the template
         for similar_log in similar_logs:
-            if not re.match(template_regex, similar_log.page_content):
+            if not check_template_match(similar_log.page_content, template_regex):
                 continue
 
         # If the template matches all the logs, stop the self-reflection loop
@@ -88,16 +115,25 @@ def get_template(log: str) -> str:
 
     # Update the template metadata value for the similar logs
     for similar_log in similar_logs:
+        if similar_log.metadata["template"] == template_regex:
+            continue
+
         similar_log.metadata["template"] = template_regex
         vector_store.update_document(similar_log)
 
     # Save the new logs to the vector store
     vector_store.add_document(Document(id=uuid.uuid4(), page_content=log, metadata={"template": template_regex}))
 
-    return template_regex
-
 
 if __name__ == "__main__":
-    template = get_template("2022-01-21 01:04:19 jhall/192.168.230.165:46011 peer info: IV_TCPNL=1")
+    logs_df = pd.read_csv(config.TEST_LOG_PATH)
+    logs_df = logs_df.fillna("")
 
-    print(template)
+    for log in tqdm(logs_df["text"], desc="Processing logs"):
+        compute_template(log)
+
+    with Path.open(config.TEST_OUT_PATH, "w") as out_file:
+        out_file.write("text,template\n")
+        for log in tqdm(logs_df["text"], desc="Writing output"):
+            template = vector_store.get_template(log)
+            out_file.write(f"{log},{template}\n")
