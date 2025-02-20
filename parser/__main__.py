@@ -5,19 +5,16 @@ from pathlib import Path
 
 import pandas as pd
 from langchain_core.documents import Document
-from langchain_core.globals import set_debug, set_verbose
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from tqdm import tqdm
 
 from parser import config
 from parser.chain import create_chain
 from parser.vectore_store import VectorStore
 
-set_verbose(False)
-set_debug(False)
-
 # Load the embeddings model
-local_embeddings = OllamaEmbeddings(model=config.EMBEDDINGS_MODEL)
+local_embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDINGS_MODEL, model_kwargs={"trust_remote_code": True})
 
 # Reset the chroma database if the flag is set
 if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
@@ -26,12 +23,15 @@ if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
 # Create the vector store
 vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
 
-# Create the parser model
-parser_model = ChatOllama(
-    model=config.PARSER_MODEL,
-    temperature=config.PARSER_TEMPERATURE,
-    num_ctx=config.PARSER_NUM_CTX,
+parser_pipeline = HuggingFacePipeline.from_model_id(
+    model_id=config.PARSER_MODEL,
+    task="text-generation",
+    device_map="auto",
+    pipeline_kwargs={"temperature": config.PARSER_TEMPERATURE, "max_length": config.PARSER_NUM_CTX, "truncation": True},
 )
+
+# Create the parser model
+parser_model = ChatHuggingFace(llm=parser_pipeline)
 
 chain = create_chain(parser_model)
 
@@ -50,9 +50,6 @@ def template_to_regex(template: str) -> str:
         str: The resulting regular expression string.
 
     """
-    # Fix small errors in <*> placeholders, e.g. <*/> or <*-/>
-    #template = re.sub(r"<\*[^>]{1,2}>", "<*>", template)
-
     # Replace <*> with the regex pattern (.*?)
     regex = template.replace("<*>", "(.*?)").strip()
 

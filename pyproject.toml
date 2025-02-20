@@ -8,14 +8,17 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.13"
-ollama = "^0.4.7"
-langchain-ollama = "^0.2.3"
 langchain-chroma = "^0.2.2"
 langchain = "^0.3.18"
 langchain-community = "^0.3.17"
 python-dotenv = "^1.0.1"
 pandas = "^2.2.3"
 tqdm = "^4.67.1"
+torch = "^2.6.0"
+langchain-huggingface = "^0.1.2"
+sentence-transformers = "^3.4.1"
+accelerate = "^1.4.0"
+einops = "^0.8.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
