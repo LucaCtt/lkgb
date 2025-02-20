@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # The huggingface hub api token to use for downloading models,
-# generated from https://huggingface.co/docs/hub/security-tokens
+# generated from https://huggingface.co/docs/hub/security-tokens.
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
 if not HUGGINGFACEHUB_API_TOKEN:
@@ -16,25 +16,37 @@ TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/test.csv")
 
 TEST_OUT_PATH = os.getenv("TEST_OUT_PATH", "data/test_out.csv")
 
+# The path to the dir where the execution logs will be saved.
+LOGS_OUT_DIR = os.getenv("LOGS_OUT_PATH", "logs")
+
 # The minimum amount of quality (defined as number of very similar logs)
 # that a log must have to be considered a memory match.
+# Must be greater than 0.
 MEMORY_MATCH_MIN_QUALITY = int(os.getenv("MEMORY_MATCH_MIN_QUALITY", "3"))
 
-# The path to the dir where the chroma database should be stored
+if MEMORY_MATCH_MIN_QUALITY <= 0:
+    msg = "MEMORY_MATCH_MIN_QUALITY must be greater than 0"
+    raise ValueError(msg)
+
+# The path to the dir where the chroma database should be stored.
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 
-# Whether to reset the chroma database on startup
+# Whether to reset the chroma database on startup.
 RESET_CHROMA_DB = bool(os.getenv("RESET_CHROMA_DB", "0"))
 
-# The HuggingFace model used to embed logs
+# The HuggingFace model used to embed logs.
 EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "nomic-ai/nomic-embed-text-v1.5")
 
-# The HuggingFace model used to parse logs
+# The HuggingFace model used to parse logs.
 PARSER_MODEL = os.getenv("PARSER_MODEL", "Qwen/Qwen2.5-Coder-7B-Instruct")
 
 # The temperature of the LLM used to parse logs.
 # Must be between 0 and 1.
 PARSER_TEMPERATURE = float(os.getenv("PARSER_TEMPERATURE", "0.5"))
+
+if PARSER_TEMPERATURE < 0 or PARSER_TEMPERATURE > 1:
+    msg = "PARSER_TEMPERATURE must be between 0 and 1"
+    raise ValueError(msg)
 
 # The number of context tokens to use when parsing logs.
 PARSER_NUM_CTX = int(os.getenv("PARSER_NUM_CTX", "4096"))
@@ -42,3 +54,7 @@ PARSER_NUM_CTX = int(os.getenv("PARSER_NUM_CTX", "4096"))
 # The number of self-reflection steps to take.
 # Must be greater than 0.
 SELF_REFLECTION_STEPS = int(os.getenv("SELF_REFLECTION_STEPS", "3"))
+
+if SELF_REFLECTION_STEPS <= 0:
+    msg = "SELF_REFLECTION_STEPS must be greater than 0"
+    raise ValueError(msg)
