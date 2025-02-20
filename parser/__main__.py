@@ -19,7 +19,7 @@ set_debug(False)
 # Load the embeddings model
 local_embeddings = OllamaEmbeddings(model=config.EMBEDDINGS_MODEL)
 
-
+# Reset the chroma database if the flag is set
 if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
     shutil.rmtree(config.CHROMA_PERSIST_DIR)
 
@@ -27,15 +27,36 @@ if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
 vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
 
 # Create the parser model
-parser_model = ChatOllama(model=config.PARSER_MODEL, temperature=config.PARSER_TEMPERATURE)
+parser_model = ChatOllama(
+    model=config.PARSER_MODEL,
+    temperature=config.PARSER_TEMPERATURE,
+    num_ctx=config.PARSER_NUM_CTX,
+)
 
 chain = create_chain(parser_model)
 
 
 def template_to_regex(template: str) -> str:
+    """
+    Converts a template string with placeholders into a regular expression string.
+
+    The function replaces the placeholder "<*>" in the template with the regex pattern "(.*?)",
+    which matches any character sequence. It also corrects small errors the parser might make.
+
+    Args:
+        template (str): The template string containing placeholders.
+
+    Returns:
+        str: The resulting regular expression string.
+
+    """
+    # Fix small errors in <*> placeholders, e.g. <*/> or <*-/>
+    #template = re.sub(r"<\*[^>]{1,2}>", "<*>", template)
+
+    # Replace <*> with the regex pattern (.*?)
     regex = template.replace("<*>", "(.*?)").strip()
 
-    # Remove the quotes from the regex if they exist
+    # Remove any quotes around the regex
     regex = regex.removeprefix("'").removesuffix("'")
 
     # Remove any extra spaces from the regex
@@ -43,6 +64,17 @@ def template_to_regex(template: str) -> str:
 
 
 def check_template_match(log: str, template: str) -> bool:
+    """
+    Checks if a given log string matches a specified template using regular expressions.
+
+    Args:
+        log (str): The log string to be checked.
+        template (str): The regular expression template to match against the log string.
+
+    Returns:
+        bool: True if the log matches the template, False otherwise. If the template is invalid, returns False.
+
+    """
     try:
         return re.match(template, log) is not None
     except re.error:
@@ -50,6 +82,17 @@ def check_template_match(log: str, template: str) -> bool:
 
 
 def check_all_templates_match(log: str, templates: list[str]) -> bool:
+    """
+    Checks if a given log string matches all the provided regular expression templates.
+
+    Args:
+        log (str): The log string to be checked.
+        templates (list[str]): A list of regular expression templates to match against the log.
+
+    Returns:
+        bool: True if the log matches all the templates, False otherwise. If there is an error in any of the regular expressions, it returns False.
+
+    """
     try:
         return all(re.match(template, log) for template in templates)
     except re.error:

@@ -34,7 +34,23 @@ class VectorStore:
             collection_metadata={"hnsw:space": "cosine"},
         )
 
-    def load_df(self, df: pd.DataFrame):
+    def load_df(self, df: pd.DataFrame) -> None:
+        """
+        Loads a DataFrame into the vector store.
+
+        This method takes a pandas DataFrame, uses a DataFrameLoader to extract
+        the content from the specified column, and then adds the extracted data
+        to the vector store.
+
+        Args:
+            df (pd.DataFrame): The DataFrame containing the data to be loaded.
+                               The DataFrame should have a column named "text"
+                               which contains the content to be processed.
+
+        Returns:
+            None
+
+        """
         loader = DataFrameLoader(data_frame=df, page_content_column="text")
         data = loader.load()
 

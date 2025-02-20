@@ -28,6 +28,9 @@ PARSER_MODEL = os.getenv("PARSER_MODEL", "qwen2.5-coder:7b")
 # Must be between 0 and 1.
 PARSER_TEMPERATURE = float(os.getenv("PARSER_TEMPERATURE", "0.5"))
 
+# The number of context tokens to use when parsing logs.
+PARSER_NUM_CTX = int(os.getenv("PARSER_NUM_CTX", "4096"))
+
 # The number of self-reflection steps to take.
 # Must be greater than 0.
 SELF_REFLECTION_STEPS = int(os.getenv("SELF_REFLECTION_STEPS", "3"))
