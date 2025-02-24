@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 import pandas as pd
 from chromadb import Embeddings
@@ -15,7 +16,7 @@ class VectorStore:
     VectorStore is thin wrapper around Chroma for storing and retrieving text embeddings.
     """
 
-    def __init__(self, persist_dir: str, embeddings_model: Embeddings) -> "VectorStore":
+    def __init__(self, persist_dir: str | None, embeddings_model: Embeddings) -> "VectorStore":
         """
         Initializes the VectorStore with a persistent directory and an embeddings model.
 
@@ -73,6 +74,28 @@ class VectorStore:
 
         return match["metadatas"][0]["template"]
 
+    def find_very_similar_logs_with_template_and_scores(self, log: str) -> list[tuple[Document, float]]:
+        """
+        Finds logs that are very similar to the given log using a predefined template.
+
+        This method searches for logs in the store that have a high similarity score
+        with the provided log. It uses a similarity threshold and filters out logs
+        that do not have a template.
+
+        Args:
+            log (str): The log string to find similar logs for.
+
+        Returns:
+            list[tuple[Document, float]]: A list of tuples containing Document objects and their similarity scores.
+
+        """
+        return self.store.similarity_search_with_relevance_scores(
+            self.__compose_similarity_question(log),
+            score_threshold=0.7,
+            k=10,
+            filter={"template": {"$ne": ""}},
+        )
+
     def find_very_similar_logs_with_template(self, log: str) -> list[Document]:
         """
         Finds logs that are very similar to the given log using a predefined template.
@@ -88,12 +111,7 @@ class VectorStore:
             list[Document]: A list of Document objects that are very similar to the given log.
 
         """
-        similar = self.store.similarity_search_with_relevance_scores(
-            self.__compose_similarity_question(log),
-            score_threshold=0.7,
-            k=10,
-            filter={"template": {"$ne": ""}},
-        )
+        similar = self.find_very_similar_logs_with_template_and_scores(log)
         return [doc for doc, _ in similar]
 
     def find_similar_logs(self, log: str) -> list[Document]:
@@ -118,14 +136,23 @@ class VectorStore:
         )
         return [doc for doc, _ in similar]
 
-    def add_document(self, document: Document) -> None:
+    def add_document(self, log: str, template: str) -> None:
         """
         Adds a new document to the store.
 
         Args:
-            document (Document): The document object to be added to the store.
+            log (str): The log string to be added to the store.
+            template (str): The template string associated with the log.
 
         """
+        document = (
+            Document(
+                id=uuid.uuid4(),
+                page_content=log,
+                metadata={"template": template},
+            ),
+        )
+
         self.store.add_documents([document])
 
     def update_document(self, document: Document) -> None:
@@ -149,4 +176,4 @@ class VectorStore:
         return self.store.get(where={"template": {"$eq": ""}})["documents"]
 
     def __compose_similarity_question(self, log: str) -> str:
-        return f'Which logs are most similar to "{log}"?'
+        return f"Instruct: Retrieve semantically similar text.\nQuery: {log}"

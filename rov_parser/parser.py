@@ -1,10 +1,8 @@
 import re
-import uuid
 
-from langchain_core.documents import Document
 from langchain_core.runnables import Runnable
 
-from rov_parser.vectore_store import VectorStore
+from rov_parser.vector_store import VectorStore
 
 
 class Parser:
@@ -34,13 +32,7 @@ class Parser:
             log,
             [similar.metadata["template"] for similar in very_similar_logs],
         ):
-            self.vector_store.add_document(
-                Document(
-                    id=uuid.uuid4(),
-                    page_content=log,
-                    metadata={"template": very_similar_logs[0].metadata["template"]},
-                ),
-            )
+            self.vector_store.add_document(log, very_similar_logs[0].metadata["template"])
             return
 
         # If there are no very similar logs or their template doesn't match,
@@ -80,9 +72,7 @@ class Parser:
             self.vector_store.update_document(similar_log)
 
         # Save the new logs to the vector store
-        self.vector_store.add_document(
-            Document(id=uuid.uuid4(), page_content=log, metadata={"template": template_regex}),
-        )
+        self.vector_store.add_document(log, template_regex)
 
     def __template_to_regex(self, template: str) -> str:
         """

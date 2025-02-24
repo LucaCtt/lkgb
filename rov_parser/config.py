@@ -35,7 +35,7 @@ CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 RESET_CHROMA_DB = bool(os.getenv("RESET_CHROMA_DB", "0"))
 
 # The HuggingFace model used to embed logs.
-EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "nomic-ai/nomic-embed-text-v1.5")
+EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "NovaSearch/stella_en_400M_v5")
 
 # The HuggingFace model used to parse logs.
 PARSER_MODEL = os.getenv("PARSER_MODEL", "Qwen/Qwen2.5-Coder-7B-Instruct")
