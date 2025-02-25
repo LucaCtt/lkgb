@@ -6,7 +6,7 @@ load_dotenv()
 
 # Whether to use the Ollama backend for parsing logs.
 # The default is to use the HuggingFace backend instead.
-USE_OLLAMA_BACKEND = bool(os.getenv("USE_OLLAMA_BACKEND", "0"))
+USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "0")))
 
 # The huggingface hub api token to use for downloading models,
 # generated from https://huggingface.co/docs/hub/security-tokens.
@@ -36,7 +36,7 @@ if MEMORY_MATCH_MIN_QUALITY <= 0:
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 
 # Whether to reset the chroma database on startup.
-RESET_CHROMA_DB = bool(os.getenv("RESET_CHROMA_DB", "0"))
+RESET_CHROMA_DB = bool(int(os.getenv("RESET_CHROMA_DB", "0")))
 
 # The HuggingFace model used to embed logs.
 EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "nomic-ai/nomic-embed-text-v1.5")
