@@ -1,16 +1,125 @@
 import re
 
-from langchain_core.runnables import Runnable
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import Runnable, RunnableWithMessageHistory
 
 from rov_parser.vector_store import VectorStore
 
+# For deepseek R1 it's recommended to input all instructions in a user prompt.
+gen_template_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "human",
+            """I will provide you with a list of logs. You must identify and abstract all the dynamic variables in logs with '<*>' and output ONE static log template that matches all the logs. You are also provided with a list of rules to follow and an example to understand the task.
+
+                [Rules]
+                    1. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.
+                    2. Please reason step by step, and put your final answer within '\\boxed{}'.
+                    3. Initiate your response with \"<think>\\n\" at the beginning of every output.
+
+                [Example]
+                ["2022-01-21 00:09:11 try to connect to host: 172.16.254.1:5000, finished.", "2022-01-21 00:09:11 try to connect to host: 173.16.254.2:6060, finished."] -> <*> try to connect to host: <*>, finished.
+
+                [Input]
+                {logs}
+            """,
+        ),
+        MessagesPlaceholder(variable_name="messages"),
+    ],
+)
+
+correct_template_prompt = ChatPromptTemplate.from_messages(
+    [("human", 'The template you generated is invalid for log "{log}". Please try again.')],
+)
+
+
+def format_logs_for_prompt(logs: list[str]) -> str:
+    """
+    Formats the given logs into a string suitable for use in a prompt.
+
+    Args:
+        logs (list[str]): A list of logs.
+
+    Returns:
+        str: A formatted string containing the input logs, suitable for use in a prompt.
+
+    """
+    # Cut the "text: " prefix from the page content of each log
+    all_logs = [f'"{log}"' for log in logs]
+
+    return "[" + ", ".join(all_logs) + "]"
+
+
+def template_to_regex(template: str) -> str:
+    """
+    Converts a template string with placeholders into a regular expression string.
+
+    The function replaces the placeholder "<*>" in the template with the regex pattern "(.*?)",
+    which matches any character sequence. It also corrects small errors the parser might make.
+
+    Args:
+        template (str): The template string containing placeholders.
+
+    Returns:
+        str: The resulting regular expression string.
+
+    """
+    # Replace <*> with the regex pattern (.*?)
+    regex = template.replace("<*>", "(.*?)").strip()
+
+    # Remove any quotes around the regex
+    regex = regex.removeprefix("'").removesuffix("'")
+
+    # Remove any extra spaces from the regex
+    return regex.strip()
+
+
+def check_template_match(log: str, template: str) -> bool:
+    """
+    Checks if a given log string matches a specified template using regular expressions.
+
+    Args:
+        log (str): The log string to be checked.
+        template (str): The regular expression template to match against the log string.
+
+    Returns:
+        bool: True if the log matches the template, False otherwise. If the template is invalid, returns False.
+
+    """
+    try:
+        return re.match(template, log) is not None
+    except re.error:
+        return False
+
 
 class Parser:
-    def __init__(self, chain: Runnable, vector_store: VectorStore) -> "Parser":
-        self.chain = chain
+    def __init__(
+        self,
+        parser_model: Runnable,
+        vector_store: VectorStore,
+        memory_match_min_quality: int,
+        self_reflection_steps: int,
+    ) -> "Parser":
+        self.history = ChatMessageHistory()
         self.vector_store = vector_store
+        self.memory_match_min_quality = memory_match_min_quality
+        self.self_reflection_steps = self_reflection_steps
 
-    def compute_template(self, log: str, memory_match_min_quality: int, self_reflection_steps: int) -> None:
+        chain = (
+            {"logs": lambda inputs: format_logs_for_prompt(inputs["logs"])}
+            | gen_template_prompt
+            | parser_model
+            | (lambda output: template_to_regex(output))
+        )
+        self.chain = RunnableWithMessageHistory(
+            chain,
+            lambda _: self.history,
+            input_messages_key="logs",
+            history_messages_key="messages",
+        )
+
+    def compute_template(self, log: str) -> None:
         """
         Given a log, this function identifies and updates the template for the log and also for similar logs.
         It first searches for very similar logs in the vector store and checks if their templates match the current log.
@@ -18,8 +127,6 @@ class Parser:
 
         Args:
             log (str): The log for which the template needs to be identified.
-            memory_match_min_quality (int): The minimum number of very similar logs required to consider their template.
-            self_reflection_steps (int): The number of self-reflection steps to perform to verify the template.
 
         """
         # Check if there are very similar logs
@@ -28,7 +135,7 @@ class Parser:
 
         # If there are very similar logs,
         # check if their template matches with the current log
-        if len(very_similar_logs) >= memory_match_min_quality and self.__check_all_templates_match(
+        if len(very_similar_logs) >= self.memory_match_min_quality and self.__check_all_templates_match(
             log,
             [similar.metadata["template"] for similar in very_similar_logs],
         ):
@@ -39,25 +146,22 @@ class Parser:
         # find sufficiently similar logs
         similar_logs = self.vector_store.find_similar_logs(log)
 
+        all_logs = [log, *[similar_log.page_content for similar_log in similar_logs]]
+
         # Perform self-reflection to verify that the template
         # matches both the current and similar logs
-        self_reflection_countdown = self_reflection_steps
+        self_reflection_countdown = self.self_reflection_steps
 
         while self_reflection_countdown > 0:
             self_reflection_countdown -= 1
 
             # Find the template using the current log and the similar logs
-            template = self.chain.invoke({"input_log": log, "similar_logs": similar_logs})
+            template_regex = self.chain.invoke({"logs": all_logs})
 
-            template_regex = self.__template_to_regex(template)
-
-            # Check that the current log matches the template
-            if not self.__check_template_match(log, template_regex):
-                continue
-
-            # Check that all the similar logs match the template
-            for similar_log in similar_logs:
-                if not self.__check_template_match(similar_log.page_content, template_regex):
+            # Check that all logs match the template
+            for current_log in all_logs:
+                if not check_template_match(current_log, template_regex):
+                    self.history.add_user_message(correct_template_prompt.invoke({"log": current_log}))
                     continue
 
             # If the template matches all the logs, stop the self-reflection loop
@@ -73,60 +177,3 @@ class Parser:
 
         # Save the new logs to the vector store
         self.vector_store.add_document(log, template_regex)
-
-    def __template_to_regex(self, template: str) -> str:
-        """
-        Converts a template string with placeholders into a regular expression string.
-
-        The function replaces the placeholder "<*>" in the template with the regex pattern "(.*?)",
-        which matches any character sequence. It also corrects small errors the parser might make.
-
-        Args:
-            template (str): The template string containing placeholders.
-
-        Returns:
-            str: The resulting regular expression string.
-
-        """
-        # Replace <*> with the regex pattern (.*?)
-        regex = template.replace("<*>", "(.*?)").strip()
-
-        # Remove any quotes around the regex
-        regex = regex.removeprefix("'").removesuffix("'")
-
-        # Remove any extra spaces from the regex
-        return regex.strip()
-
-    def __check_template_match(self, log: str, template: str) -> bool:
-        """
-        Checks if a given log string matches a specified template using regular expressions.
-
-        Args:
-            log (str): The log string to be checked.
-            template (str): The regular expression template to match against the log string.
-
-        Returns:
-            bool: True if the log matches the template, False otherwise. If the template is invalid, returns False.
-
-        """
-        try:
-            return re.match(template, log) is not None
-        except re.error:
-            return False
-
-    def __check_all_templates_match(self, log: str, templates: list[str]) -> bool:
-        """
-        Checks if a given log string matches all the provided regular expression templates.
-
-        Args:
-            log (str): The log string to be checked.
-            templates (list[str]): A list of regular expression templates to match against the log.
-
-        Returns:
-            bool: True if the log matches all the templates, False otherwise. If there is an error in any of the regular expressions, it returns False.
-
-        """
-        try:
-            return all(re.match(template, log) for template in templates)
-        except re.error:
-            return False

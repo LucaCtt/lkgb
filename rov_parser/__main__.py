@@ -1,6 +1,5 @@
 import logging
 import shutil
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -9,22 +8,16 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from tqdm import tqdm
 
 from rov_parser import config
-from rov_parser.chain import create_chain
 from rov_parser.parser import Parser
-from rov_parser.vectore_store import VectorStore
+from rov_parser.vector_store import VectorStore
 
 if not Path.exists(Path(config.LOGS_OUT_DIR)):
     Path.mkdir(Path(config.LOGS_OUT_DIR))
 
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
-root_logger = logging.getLogger()
-file_handler = logging.FileHandler(f"{config.LOGS_OUT_DIR}/{datetime.now(tz=UTC).isoformat()}.log")
-file_handler.setFormatter(log_formatter)
-root_logger.addHandler(file_handler)
-
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
-root_logger.addHandler(console_handler)
+logging.getLogger().addHandler(console_handler)
 
 
 # Load the embeddings model
@@ -46,16 +39,14 @@ parser_pipeline = HuggingFacePipeline.from_model_id(
 )
 parser_model = ChatHuggingFace(llm=parser_pipeline)
 
-chain = create_chain(parser_model)
-
-parser = Parser(chain, vector_store)
+parser = Parser(parser_model, vector_store, config.MEMORY_MATCH_MIN_QUALITY, config.SELF_REFLECTION_STEPS)
 
 if __name__ == "__main__":
     logs_df = pd.read_csv(config.TEST_LOG_PATH)
     logs_df = logs_df.fillna("")
 
     for log in tqdm(logs_df["text"], desc="Processing logs"):
-        parser.compute_template(log, config.MEMORY_MATCH_MIN_QUALITY, config.SELF_REFLECTION_STEPS)
+        parser.compute_template(log)
 
     with Path.open(config.TEST_OUT_PATH, "w") as out_file:
         out_file.write("text,template\n")
