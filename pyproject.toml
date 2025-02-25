@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.11"
 langchain-chroma = "^0.2.2"
 langchain = "^0.3.18"
 langchain-community = "^0.3.17"
