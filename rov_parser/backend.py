@@ -40,7 +40,7 @@ class OllamaBackend(Backend):
 
     def get_embeddings(self, model: str) -> Embeddings:
         try:
-            from langchain_ollama.embeddings import OllamaEmbeddings
+            from langchain_ollama.embeddings import OllamaEmbeddings  # type: ignore[import]
 
             return OllamaEmbeddings(model=model)
         except ModuleNotFoundError as e:
@@ -49,7 +49,7 @@ class OllamaBackend(Backend):
 
     def get_parser_model(self, model: str, temperature: float, context_length: int) -> Runnable:
         try:
-            from langchain_ollama.chat_models import ChatOllama
+            from langchain_ollama.chat_models import ChatOllama  # type: ignore[import]
 
             return ChatOllama(model=model, temperature=temperature, num_ctx=context_length)
         except ModuleNotFoundError as e:
