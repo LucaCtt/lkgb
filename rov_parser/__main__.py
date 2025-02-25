@@ -3,25 +3,31 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
-from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from tqdm import tqdm
 
 from rov_parser import config
+from rov_parser.backend import HuggingFaceBackend, OllamaBackend
 from rov_parser.parser import Parser
 from rov_parser.vector_store import VectorStore
 
 if not Path.exists(Path(config.LOGS_OUT_DIR)):
     Path.mkdir(Path(config.LOGS_OUT_DIR))
 
-log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
-logging.getLogger().addHandler(console_handler)
+logger = logging.getLogger()
+logger.addHandler(console_handler)
 
+if config.USE_OLLAMA_BACKEND:
+    logger.info("Using Ollama backend")
+    backend = OllamaBackend()
+else:
+    logger.info("Using HuggingFace backend")
+    backend = HuggingFaceBackend()
 
 # Load the embeddings model
-local_embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDINGS_MODEL, model_kwargs={"trust_remote_code": True})
+local_embeddings = backend.get_embeddings(model=config.EMBEDDINGS_MODEL)
 
 # Reset the chroma database if the flag is set
 if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
@@ -31,13 +37,9 @@ if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
 vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
 
 # Create the parser model
-parser_pipeline = HuggingFacePipeline.from_model_id(
-    model_id=config.PARSER_MODEL,
-    task="text-generation",
-    device_map="auto",
-    pipeline_kwargs={"temperature": config.PARSER_TEMPERATURE, "max_length": config.PARSER_NUM_CTX, "truncation": True},
+parser_model = backend.get_parser_model(
+    model=config.PARSER_MODEL, temperature=config.PARSER_TEMPERATURE, context_length=config.PARSER_NUM_CTX,
 )
-parser_model = ChatHuggingFace(llm=parser_pipeline)
 
 parser = Parser(parser_model, vector_store, config.MEMORY_MATCH_MIN_QUALITY, config.SELF_REFLECTION_STEPS)
 

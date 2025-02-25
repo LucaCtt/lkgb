@@ -1,8 +1,9 @@
 import re
 
 from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import Runnable, RunnableWithMessageHistory
+from langchain_core.runnables import Runnable, RunnablePassthrough, RunnableWithMessageHistory
 
 from rov_parser.vector_store import VectorStore
 
@@ -15,7 +16,7 @@ gen_template_prompt = ChatPromptTemplate.from_messages(
 
                 [Rules]
                     1. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.
-                    2. Please reason step by step, and put your final answer within '\\boxed{}'.
+                    2. Please reason step by step, and put your final answer within '\\boxed{{}}'.
                     3. Initiate your response with \"<think>\\n\" at the beginning of every output.
 
                 [Example]
@@ -65,6 +66,11 @@ def template_to_regex(template: str) -> str:
         str: The resulting regular expression string.
 
     """
+    # Extract the string within \boxed{} from the template
+    match = re.search(r"\\boxed{(.*?)}", template)
+    if match:
+        template = match.group(1)
+
     # Replace <*> with the regex pattern (.*?)
     regex = template.replace("<*>", "(.*?)").strip()
 
@@ -107,9 +113,10 @@ class Parser:
         self.self_reflection_steps = self_reflection_steps
 
         chain = (
-            {"logs": lambda inputs: format_logs_for_prompt(inputs["logs"])}
+            RunnablePassthrough.assign(logs=lambda inputs: format_logs_for_prompt(inputs["logs"]))
             | gen_template_prompt
             | parser_model
+            | StrOutputParser()
             | (lambda output: template_to_regex(output))
         )
         self.chain = RunnableWithMessageHistory(
@@ -146,7 +153,7 @@ class Parser:
         # find sufficiently similar logs
         similar_logs = self.vector_store.find_similar_logs(log)
 
-        all_logs = [log, *[similar_log.page_content for similar_log in similar_logs]]
+        all_logs = [log, *[similar_log.page_content["search_document: ":] for similar_log in similar_logs]]
 
         # Perform self-reflection to verify that the template
         # matches both the current and similar logs
@@ -156,7 +163,10 @@ class Parser:
             self_reflection_countdown -= 1
 
             # Find the template using the current log and the similar logs
-            template_regex = self.chain.invoke({"logs": all_logs})
+            template_regex = self.chain.invoke(
+                {"logs": all_logs},
+                {"configurable": {"session_id": "unused"}},
+            )
 
             # Check that all logs match the template
             for current_log in all_logs:

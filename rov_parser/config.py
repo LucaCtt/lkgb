@@ -4,11 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Whether to use the Ollama backend for parsing logs.
+# The default is to use the HuggingFace backend instead.
+USE_OLLAMA_BACKEND = bool(os.getenv("USE_OLLAMA_BACKEND", "0"))
+
 # The huggingface hub api token to use for downloading models,
 # generated from https://huggingface.co/docs/hub/security-tokens.
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
-if not HUGGINGFACEHUB_API_TOKEN:
+if not HUGGINGFACEHUB_API_TOKEN and not USE_OLLAMA_BACKEND:
     msg = "HUGGINGFACEHUB_API_TOKEN is not set"
     raise ValueError(msg)
 
@@ -35,7 +39,7 @@ CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 RESET_CHROMA_DB = bool(os.getenv("RESET_CHROMA_DB", "0"))
 
 # The HuggingFace model used to embed logs.
-EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "nomic-ai/nomic-embed-text-v2-moe")
+EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "nomic-ai/nomic-embed-text-v1.5")
 
 # The HuggingFace model used to parse logs.
 PARSER_MODEL = os.getenv("PARSER_MODEL", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B")

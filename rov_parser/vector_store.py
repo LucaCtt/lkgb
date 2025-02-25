@@ -74,28 +74,6 @@ class VectorStore:
 
         return match["metadatas"][0]["template"]
 
-    def find_very_similar_logs_with_template_and_scores(self, log: str) -> list[tuple[Document, float]]:
-        """
-        Finds logs that are very similar to the given log using a predefined template.
-
-        This method searches for logs in the store that have a high similarity score
-        with the provided log. It uses a similarity threshold and filters out logs
-        that do not have a template.
-
-        Args:
-            log (str): The log string to find similar logs for.
-
-        Returns:
-            list[tuple[Document, float]]: A list of tuples containing Document objects and their similarity scores.
-
-        """
-        return self.store.similarity_search_with_relevance_scores(
-            self.__compose_similarity_question(log),
-            score_threshold=0.7,
-            k=10,
-            filter={"template": {"$ne": ""}},
-        )
-
     def find_very_similar_logs_with_template(self, log: str) -> list[Document]:
         """
         Finds logs that are very similar to the given log using a predefined template.
@@ -111,7 +89,12 @@ class VectorStore:
             list[Document]: A list of Document objects that are very similar to the given log.
 
         """
-        similar = self.find_very_similar_logs_with_template_and_scores(log)
+        similar = self.store.similarity_search_with_relevance_scores(
+            self.__compose_similarity_question(log),
+            score_threshold=0.7,
+            k=10,
+            filter={"template": {"$ne": ""}},
+        )
         return [doc for doc, _ in similar]
 
     def find_similar_logs(self, log: str) -> list[Document]:
@@ -148,7 +131,7 @@ class VectorStore:
         document = (
             Document(
                 id=uuid.uuid4(),
-                page_content=log,
+                page_content="search_document: " + log,
                 metadata={"template": template},
             ),
         )
@@ -176,4 +159,4 @@ class VectorStore:
         return self.store.get(where={"template": {"$eq": ""}})["documents"]
 
     def __compose_similarity_question(self, log: str) -> str:
-        return f"Instruct: Retrieve semantically similar text.\nQuery: {log}"
+        return f"search_query: {log}"
