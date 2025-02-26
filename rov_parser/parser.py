@@ -182,7 +182,6 @@ class Parser:
             # Check that all logs match the template
             for current_log in all_logs:
                 if not check_template_match(current_log, template_regex):
-                    template_regex = None
                     self.history.add_user_message(
                         f'The template you generated is invalid for log "{current_log}". Please try again.',
                     )
