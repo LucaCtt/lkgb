@@ -7,16 +7,47 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
 
 class Backend(ABC):
+    """
+    Abstract base class for backend implementations.
+
+    This class defines the interface for backend services that provide
+    embeddings and parser models.
+    """
+
     @abstractmethod
     def get_embeddings(self, model: str) -> Embeddings:
-        pass
+        """
+        Retrieve embeddings from the specified model.
+
+        Args:
+            model (str): The name or identifier of the model from which to get embeddings.
+
+        Returns:
+            Embeddings: The embeddings retrieved from the specified model.
+
+        """
 
     @abstractmethod
     def get_parser_model(self, model: str, temperature: float, context_length: int) -> Runnable:
-        pass
+        """
+        Retrieves a parser model based on the specified parameters.
+
+        Args:
+            model (str): The name or identifier of the model to retrieve.
+            temperature (float): The temperature parameter for the model, which controls the randomness of the output.
+            context_length (int): The length of the context to be considered by the model.
+
+        Returns:
+            Runnable: An instance of a Runnable object that represents the parser model.
+
+        """
 
 
 class HuggingFaceBackend(Backend):
+    """
+    A backend implementation that uses Hugging Face models for generating embeddings and parsing text.
+    """
+
     def get_embeddings(self, model: str) -> Embeddings:
         return HuggingFaceEmbeddings(model_name=model, model_kwargs={"trust_remote_code": True})
 
@@ -35,8 +66,9 @@ class HuggingFaceBackend(Backend):
 
 
 class OllamaBackend(Backend):
-    def __init__(self) -> "OllamaBackend":
-        super().__init__()
+    """
+    A backend implementation that uses Ollama models for generating embeddings and parsing text.
+    """
 
     def get_embeddings(self, model: str) -> Embeddings:
         try:

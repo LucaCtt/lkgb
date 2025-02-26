@@ -14,7 +14,7 @@ def evaluate_result(pred_file: str, true_file: str) -> tuple[float, float]:
         df_pred["template"].str.replace(r"\s+", "", regex=True).str.replace(r"\(\.\*\?\)", "", regex=True)
     )
 
-    group_acc = get_group_acc(df_true["template_no_spaces"], df_pred["template_no_spaces"])
+    group_acc = get_group_accuracy(df_true["template_no_spaces"], df_pred["template_no_spaces"])
 
     correctly_parsed_messages = df_pred["template_no_spaces"].eq(df_true["template_no_spaces"]).to_numpy().sum()
     parsing_acc = float(correctly_parsed_messages) / len(df_pred[["Content"]])
@@ -22,7 +22,7 @@ def evaluate_result(pred_file: str, true_file: str) -> tuple[float, float]:
     return group_acc, parsing_acc
 
 
-def get_group_acc(templates_true: pd.Series, templates_pred: pd.Series):
+def get_group_accuracy(templates_true: pd.Series, templates_pred: pd.Series) -> float:
     templated_pred_valuecounts = templates_pred.value_counts()
 
     accurate_events_count = 0
