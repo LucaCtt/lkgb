@@ -5,6 +5,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable, RunnablePassthrough, RunnableWithMessageHistory
 
+from rov_parser.reports import ParserReport
 from rov_parser.vector_store import VectorStore
 
 # For deepseek R1 it's recommended to input all instructions in a user prompt.
@@ -14,16 +15,16 @@ gen_template_prompt = ChatPromptTemplate.from_messages(
             "human",
             """I will provide you with a list of logs. You must identify and abstract all the dynamic variables in logs with '<*>' and output ONE static log template that matches all the logs. You are also provided with a list of rules to follow and an example to understand the task.
 
-                [Rules]
-                    1. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.
-                    2. Please reason step by step, and put your final answer within '\\boxed{{}}'.
-                    3. Initiate your response with \"<think>\\n\" at the beginning of every output.
+            [Rules]
+            1. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.
+            2. Please reason step by step, and put your final answer within '\\boxed{{}}'.
+            3. Initiate your response with \"<think>\\n\" at the beginning of every output.
 
-                [Example]
-                ["2022-01-21 00:09:11 try to connect to host: 172.16.254.1:5000, finished.", "2022-01-21 00:09:11 try to connect to host: 173.16.254.2:6060, finished."] -> <*> try to connect to host: <*>, finished.
+            [Example]
+            ["2022-01-21 00:09:11 try to connect to host: 172.16.254.1:5000, finished.", "2022-01-21 00:09:11 try to connect to host: 173.16.254.2:6060, finished."] -> <*> try to connect to host: <*>, finished.
 
-                [Input]
-                {logs}
+            [Input]
+            {logs}
             """,
         ),
         MessagesPlaceholder(variable_name="messages"),
@@ -125,7 +126,7 @@ class Parser:
             history_messages_key="messages",
         )
 
-    def compute_template(self, log: str) -> None:
+    def parse(self, log: str) -> ParserReport:
         """
         Given a log, this function identifies and updates the template for the log and also for similar logs.
         It first searches for very similar logs in the vector store and checks if their templates match the current log.
@@ -134,10 +135,17 @@ class Parser:
         Args:
             log (str): The log for which the template needs to be identified.
 
+        Returns:
+            ParseReport: A ParseReport object containing the timings of the parsing operations.
+
         """
+        report = ParserReport()
+
         # Check if there are very similar logs
         # Assumption: the returned documents are sorted by most relevant first
         very_similar_logs = self.vector_store.find_very_similar_logs_with_template(log)
+
+        report.find_very_similar_logs_done()
 
         # If there are very similar logs,
         # check if their template matches with the current log
@@ -146,11 +154,13 @@ class Parser:
             [similar.metadata["template"] for similar in very_similar_logs],
         ):
             self.vector_store.add_document(log, very_similar_logs[0].metadata["template"])
-            return
+            return report.finish()
 
         # If there are no very similar logs or their template doesn't match,
         # find sufficiently similar logs
         similar_logs = self.vector_store.find_similar_logs(log)
+
+        report.find_similar_logs_done()
 
         all_logs = [log, *[similar_log.page_content[len("search_document: ") :] for similar_log in similar_logs]]
 
@@ -181,6 +191,8 @@ class Parser:
             # If the template matches all the logs, stop the self-reflection loop
             break
 
+        report.template_generation_done()
+
         # Update the template metadata value for the similar logs
         for similar_log in similar_logs:
             if similar_log.metadata["template"] == template_regex:
@@ -191,3 +203,5 @@ class Parser:
 
         # Save the new logs to the vector store
         self.vector_store.add_document(log, template_regex)
+
+        return report.finish()
