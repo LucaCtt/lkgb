@@ -117,7 +117,6 @@ class Parser:
             | gen_template_prompt
             | parser_model
             | StrOutputParser()
-            | (lambda output: template_to_regex(output))
         )
         self.chain = RunnableWithMessageHistory(
             chain,
@@ -153,7 +152,7 @@ class Parser:
         # find sufficiently similar logs
         similar_logs = self.vector_store.find_similar_logs(log)
 
-        all_logs = [log, *[similar_log.page_content["search_document: ":] for similar_log in similar_logs]]
+        all_logs = [log, *[similar_log.page_content[len("search_document: ") :] for similar_log in similar_logs]]
 
         # Perform self-reflection to verify that the template
         # matches both the current and similar logs
@@ -163,15 +162,20 @@ class Parser:
             self_reflection_countdown -= 1
 
             # Find the template using the current log and the similar logs
-            template_regex = self.chain.invoke(
+            template = self.chain.invoke(
                 {"logs": all_logs},
                 {"configurable": {"session_id": "unused"}},
             )
 
+            template_regex = template_to_regex(template)
+
             # Check that all logs match the template
             for current_log in all_logs:
                 if not check_template_match(current_log, template_regex):
-                    self.history.add_user_message(correct_template_prompt.invoke({"log": current_log}))
+                    template_regex = None
+                    self.history.add_user_message(
+                        f'The template you generated is invalid for log "{current_log}". Please try again.',
+                    )
                     continue
 
             # If the template matches all the logs, stop the self-reflection loop

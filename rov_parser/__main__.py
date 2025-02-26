@@ -38,7 +38,9 @@ vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
 
 # Create the parser model
 parser_model = backend.get_parser_model(
-    model=config.PARSER_MODEL, temperature=config.PARSER_TEMPERATURE, context_length=config.PARSER_NUM_CTX,
+    model=config.PARSER_MODEL,
+    temperature=config.PARSER_TEMPERATURE,
+    context_length=config.PARSER_NUM_CTX,
 )
 
 parser = Parser(parser_model, vector_store, config.MEMORY_MATCH_MIN_QUALITY, config.SELF_REFLECTION_STEPS)

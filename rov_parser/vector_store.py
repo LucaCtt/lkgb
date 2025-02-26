@@ -128,12 +128,10 @@ class VectorStore:
             template (str): The template string associated with the log.
 
         """
-        document = (
-            Document(
-                id=uuid.uuid4(),
-                page_content="search_document: " + log,
-                metadata={"template": template},
-            ),
+        document = Document(
+            id=uuid.uuid4(),
+            page_content="search_document: " + log,
+            metadata={"template": template},
         )
 
         self.store.add_documents([document])
