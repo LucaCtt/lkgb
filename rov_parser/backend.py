@@ -62,7 +62,7 @@ class HuggingFaceBackend(Backend):
                 "truncation": True,
             },
         )
-        return ChatHuggingFace(llm=parser_pipeline)
+        return ChatHuggingFace(llm=parser_pipeline, verbose=True)
 
 
 class OllamaBackend(Backend):
