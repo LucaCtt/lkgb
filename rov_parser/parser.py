@@ -13,17 +13,8 @@ gen_template_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "human",
-            """I will provide you with a list of logs. You must identify and abstract all the dynamic variables in logs with '<*>' and output ONE static log template that matches all the logs. You are also provided with a list of rules to follow and an example to understand the task.
+            """Identify and abstract all the dynamic variables in these logs with "<*>" and output ONE static log template that matches all the logs. For example, the logs ["2022-01-21 00:09:11 try to connect to host: 172.16.254.1:5000, finished.", "2022-01-21 00:09:11 try to connect to host: 173.16.254.2:6060, finished."] are matched by the template "<*> try to connect to host: <*>, finished.". Please reason step by step, and put your final answer within "\boxed{{}}". Initiate your response with "<think>\n".
 
-            [Rules]
-            1. Datetimes and ip addresses should each be abstracted as a standalone '<*>'.
-            2. Please reason step by step, and put your final answer within '\\boxed{{}}'.
-            3. Initiate your response with \"<think>\\n\" at the beginning of every output.
-
-            [Example]
-            ["2022-01-21 00:09:11 try to connect to host: 172.16.254.1:5000, finished.", "2022-01-21 00:09:11 try to connect to host: 173.16.254.2:6060, finished."] -> <*> try to connect to host: <*>, finished.
-
-            [Input]
             {logs}
             """,
         ),
