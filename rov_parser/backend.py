@@ -28,14 +28,13 @@ class Backend(ABC):
         """
 
     @abstractmethod
-    def get_parser_model(self, model: str, temperature: float, context_length: int) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> Runnable:
         """
         Retrieves a parser model based on the specified parameters.
 
         Args:
             model (str): The name or identifier of the model to retrieve.
             temperature (float): The temperature parameter for the model, which controls the randomness of the output.
-            context_length (int): The length of the context to be considered by the model.
 
         Returns:
             Runnable: An instance of a Runnable object that represents the parser model.
@@ -51,18 +50,16 @@ class HuggingFaceBackend(Backend):
     def get_embeddings(self, model: str) -> Embeddings:
         return HuggingFaceEmbeddings(model_name=model, model_kwargs={"trust_remote_code": True})
 
-    def get_parser_model(self, model: str, temperature: float, context_length: int) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> Runnable:
         parser_pipeline = HuggingFacePipeline.from_model_id(
             model_id=model,
             task="text-generation",
             device_map="auto",
             pipeline_kwargs={
                 "temperature": temperature,
-                "max_length": context_length,
-                "truncation": True,
             },
         )
-        return ChatHuggingFace(llm=parser_pipeline, verbose=True)
+        return ChatHuggingFace(llm=parser_pipeline)
 
 
 class OllamaBackend(Backend):
@@ -79,11 +76,11 @@ class OllamaBackend(Backend):
             msg = "Please install langchain-ollama to use OllamaBackend"
             raise ImportError(msg) from e
 
-    def get_parser_model(self, model: str, temperature: float, context_length: int) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> Runnable:
         try:
             from langchain_ollama.chat_models import ChatOllama  # type: ignore[import]
 
-            return ChatOllama(model=model, temperature=temperature, num_ctx=context_length)
+            return ChatOllama(model=model, temperature=temperature)
         except ModuleNotFoundError as e:
             msg = "Please install langchain-ollama to use OllamaBackend"
             raise ImportError(msg) from e

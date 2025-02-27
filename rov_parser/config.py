@@ -56,9 +56,6 @@ if PARSER_TEMPERATURE < 0 or PARSER_TEMPERATURE > 1:
     msg = "PARSER_TEMPERATURE must be between 0 and 1"
     raise ValueError(msg)
 
-# The number of context tokens to use when parsing logs.
-PARSER_NUM_CTX = int(os.getenv("PARSER_NUM_CTX", "4096"))
-
 # The minimum amount of quality (defined as number of very similar logs)
 # that a log must have to be considered a memory match.
 # Must be greater than 0.
