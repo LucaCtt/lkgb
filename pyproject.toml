@@ -19,6 +19,7 @@ langchain-huggingface = "^0.1.2"
 sentence-transformers = "^3.4.1"
 accelerate = "^1.4.0"
 einops = "^0.8.1"
+bitsandbytes = "^0.45.3"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"

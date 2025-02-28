@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
-from langchain.globals import set_debug, set_verbose
 from tqdm import tqdm
 
 from rov_parser import config
@@ -11,9 +10,6 @@ from rov_parser.backend import HuggingFaceBackend, OllamaBackend
 from rov_parser.parser import Parser
 from rov_parser.reports import RunSummary
 from rov_parser.vector_store import VectorStore
-
-set_debug(True)
-set_verbose(True)
 
 # Create the output directories if they don't exist
 if not Path.exists(Path(config.LOGS_OUT_DIR)):
@@ -26,13 +22,14 @@ if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
 # Disable Chroma info logging
 logging.getLogger("langchain_core").setLevel(logging.ERROR)
 
-# Set up logging
-log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
+# Set up logging format
+log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
+logging.getLogger().addHandler(console_handler)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.addHandler(console_handler)
 
 # Set the backend
 if config.USE_OLLAMA_BACKEND:

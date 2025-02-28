@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 
+import torch
 from chromadb import Embeddings
 from langchain_core.runnables import Runnable
 from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from transformers import BitsAndBytesConfig
 
 
 class Backend(ABC):
@@ -51,13 +53,22 @@ class HuggingFaceBackend(Backend):
         return HuggingFaceEmbeddings(model_name=model, model_kwargs={"trust_remote_code": True})
 
     def get_parser_model(self, model: str, temperature: float) -> Runnable:
+        quantization_config = (
+            BitsAndBytesConfig(
+                load_in_8bit=True,
+            )
+            if torch.cuda.is_available()
+            else None
+        )
         parser_pipeline = HuggingFacePipeline.from_model_id(
             model_id=model,
             task="text-generation",
             device_map="auto",
             pipeline_kwargs={
                 "temperature": temperature,
+                "max_new_tokens": 2048,
             },
+            model_kwargs={"quantization_config": quantization_config} if quantization_config is not None else None,
         )
         return ChatHuggingFace(llm=parser_pipeline)
 
