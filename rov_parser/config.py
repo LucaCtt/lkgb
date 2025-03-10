@@ -12,10 +12,6 @@ USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "0")))
 # generated from https://huggingface.co/docs/hub/security-tokens.
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
-if not HUGGINGFACEHUB_API_TOKEN and not USE_OLLAMA_BACKEND:
-    msg = "HUGGINGFACEHUB_API_TOKEN is not set"
-    raise ValueError(msg)
-
 # The input path to the logs to parse.
 TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/test.csv")
 
@@ -30,6 +26,9 @@ CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 
 # Whether to reset the chroma database on startup.
 RESET_CHROMA_DB = bool(int(os.getenv("RESET_CHROMA_DB", "0")))
+
+# The ontology used to parse logs.
+LOGS_ONTOLOGY = os.getenv("ONTOLOGY", "ontologies/slogert.ttl")
 
 # The model used to embed logs.
 # Must be a model from the HuggingFace model hub if using the HuggingFace backend,

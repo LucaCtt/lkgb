@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from rov_parser import config
 from rov_parser.backend import HuggingFaceBackend, OllamaBackend
+from rov_parser.ontology import LogOntology
 from rov_parser.parser import Parser
 from rov_parser.reports import RunSummary
 from rov_parser.vector_store import VectorStore
@@ -51,7 +52,15 @@ parser_model = backend.get_parser_model(
     temperature=config.PARSER_TEMPERATURE,
 )
 
-parser = Parser(parser_model, vector_store, config.MEMORY_MATCH_MIN_QUALITY, config.SELF_REFLECTION_STEPS)
+logs_ontology = LogOntology(config.ONTOLOGY_PATH)
+
+parser = Parser(
+    parser_model,
+    vector_store,
+    logs_ontology,
+    config.MEMORY_MATCH_MIN_QUALITY,
+    config.SELF_REFLECTION_STEPS,
+)
 
 if __name__ == "__main__":
     logger.info("Reading logs from %s", config.TEST_LOG_PATH)
