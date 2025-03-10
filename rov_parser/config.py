@@ -43,7 +43,7 @@ EMBEDDINGS_MODEL = os.getenv(
 # or a model from the Ollama model hub if using the Ollama backend.
 PARSER_MODEL = os.getenv(
     "PARSER_MODEL",
-    "deepseek-r1:7b" if USE_OLLAMA_BACKEND else "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "qwen2.5-coder:7b" if USE_OLLAMA_BACKEND else "Qwen/Qwen2.5-Coder-7B-Instruct",
 )
 
 # The temperature of the LLM used to parse logs.
