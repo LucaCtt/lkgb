@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from chromadb import Embeddings
+from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import Runnable
 
 

@@ -18,17 +18,13 @@ TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/test.csv")
 # The output path to save the parsed logs with templates.
 TEST_OUT_PATH = os.getenv("TEST_OUT_PATH", "data/test_out.csv")
 
-# The path to the dir where the execution logs will be saved.
-LOGS_OUT_DIR = os.getenv("LOGS_OUT_PATH", "logs")
+# The path of the ontology used to parse logs.
+ONTOLOGY_PATH = os.getenv("ONTOLOGY", "ontologies/slogert.ttl")
 
-# The path to the dir where the chroma database should be stored.
-CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
-
-# Whether to reset the chroma database on startup.
-RESET_CHROMA_DB = bool(int(os.getenv("RESET_CHROMA_DB", "0")))
-
-# The ontology used to parse logs.
-LOGS_ONTOLOGY = os.getenv("ONTOLOGY", "ontologies/slogert.ttl")
+# Neo4j config
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
 
 # The model used to embed logs.
 # Must be a model from the HuggingFace model hub if using the HuggingFace backend,
@@ -53,15 +49,6 @@ PARSER_TEMPERATURE = float(os.getenv("PARSER_TEMPERATURE", "0.6"))
 
 if PARSER_TEMPERATURE < 0 or PARSER_TEMPERATURE > 1:
     msg = "PARSER_TEMPERATURE must be between 0 and 1"
-    raise ValueError(msg)
-
-# The minimum amount of quality (defined as number of very similar logs)
-# that a log must have to be considered a memory match.
-# Must be greater than 0.
-MEMORY_MATCH_MIN_QUALITY = int(os.getenv("MEMORY_MATCH_MIN_QUALITY", "3"))
-
-if MEMORY_MATCH_MIN_QUALITY <= 0:
-    msg = "MEMORY_MATCH_MIN_QUALITY must be greater than 0"
     raise ValueError(msg)
 
 # The number of self-reflection steps to take.

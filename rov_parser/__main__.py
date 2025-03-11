@@ -1,5 +1,4 @@
 import logging
-import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -7,21 +6,10 @@ from tqdm import tqdm
 
 from rov_parser import config
 from rov_parser.backend import HuggingFaceBackend, OllamaBackend
-from rov_parser.ontology import LogOntology
+from rov_parser.ontology import SlogertOntology
 from rov_parser.parser import Parser
 from rov_parser.reports import RunSummary
-from rov_parser.vector_store import VectorStore
-
-# Create the output directories if they don't exist
-if not Path.exists(Path(config.LOGS_OUT_DIR)):
-    Path.mkdir(Path(config.LOGS_OUT_DIR))
-
-# Reset the chroma database if the flag is set
-if config.RESET_CHROMA_DB and Path.exists(Path(config.CHROMA_PERSIST_DIR)):
-    shutil.rmtree(config.CHROMA_PERSIST_DIR)
-
-# Disable Chroma info logging
-logging.getLogger("langchain_core").setLevel(logging.ERROR)
+from rov_parser.store import Store
 
 # Set up logging format
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
@@ -40,11 +28,20 @@ else:
     logger.info("Using HuggingFace backend")
     backend = HuggingFaceBackend()
 
+# Ontology for the logs
+logs_ontology = SlogertOntology(config.ONTOLOGY_PATH)
+
 # Load the embeddings model
 local_embeddings = backend.get_embeddings(model=config.EMBEDDINGS_MODEL)
 
 # Create the vector store
-vector_store = VectorStore(config.CHROMA_PERSIST_DIR, local_embeddings)
+store = Store(
+    url=config.NEO4J_URL,
+    username=config.NEO4J_USERNAME,
+    password=config.NEO4J_PASSWORD,
+    embeddings_model=local_embeddings,
+    ontology=logs_ontology,
+)
 
 # Create the parser model
 parser_model = backend.get_parser_model(
@@ -52,13 +49,10 @@ parser_model = backend.get_parser_model(
     temperature=config.PARSER_TEMPERATURE,
 )
 
-logs_ontology = LogOntology(config.ONTOLOGY_PATH)
-
 parser = Parser(
     parser_model,
-    vector_store,
+    store,
     logs_ontology,
-    config.MEMORY_MATCH_MIN_QUALITY,
     config.SELF_REFLECTION_STEPS,
 )
 
@@ -66,7 +60,7 @@ if __name__ == "__main__":
     logger.info("Reading logs from %s", config.TEST_LOG_PATH)
 
     logs_df = pd.read_csv(config.TEST_LOG_PATH)
-    # This is necessary because the Chroma CSV reader doesn't handle NaNs
+    # To prevent weird stuff with NaNs
     logs_df = logs_df.fillna("")
 
     reports = []
@@ -79,7 +73,7 @@ if __name__ == "__main__":
     with Path.open(config.TEST_OUT_PATH, "w") as out_file:
         out_file.write("text,template\n")
         for log in tqdm(logs_df["text"], desc=f"Writing outputs to {config.TEST_OUT_PATH}", colour="blue"):
-            template = vector_store.get_template(log)
+            template = store.get_template(log)
             out_file.write(f"{log},{template}\n")
 
     logger.info("Output written.")
