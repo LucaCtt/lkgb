@@ -40,8 +40,10 @@ store = Store(
     username=config.NEO4J_USERNAME,
     password=config.NEO4J_PASSWORD,
     embeddings_model=local_embeddings,
-    ontology=logs_ontology,
 )
+
+if config.CLEAR_STORE:
+    store.clear()
 
 # Create the parser model
 parser_model = backend.get_parser_model(

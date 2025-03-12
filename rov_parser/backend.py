@@ -5,8 +5,7 @@ from langchain_core.runnables import Runnable
 
 
 class Backend(ABC):
-    """
-    Abstract base class for backend implementations.
+    """Abstract base class for backend implementations.
 
     This class defines the interface for backend services that provide
     embeddings and parser models.
@@ -14,8 +13,7 @@ class Backend(ABC):
 
     @abstractmethod
     def get_embeddings(self, model: str) -> Embeddings:
-        """
-        Retrieve embeddings from the specified model.
+        """Retrieve embeddings from the specified model.
 
         Args:
             model (str): The name or identifier of the model from which to get embeddings.
@@ -27,8 +25,7 @@ class Backend(ABC):
 
     @abstractmethod
     def get_parser_model(self, model: str, temperature: float) -> Runnable:
-        """
-        Retrieves a parser model based on the specified parameters.
+        """Retrieve a parser model based on the specified parameters.
 
         Args:
             model (str): The name or identifier of the model to retrieve.
@@ -41,9 +38,7 @@ class Backend(ABC):
 
 
 class HuggingFaceBackend(Backend):
-    """
-    A backend implementation that uses Hugging Face models for generating embeddings and parsing text.
-    """
+    """A backend implementation that uses Hugging Face models for generating embeddings and parsing text."""
 
     def get_embeddings(self, model: str) -> Embeddings:
         try:
@@ -73,9 +68,7 @@ class HuggingFaceBackend(Backend):
 
 
 class OllamaBackend(Backend):
-    """
-    A backend implementation that uses Ollama models for generating embeddings and parsing text.
-    """
+    """A backend implementation that uses Ollama models for generating embeddings and parsing text."""
 
     def get_embeddings(self, model: str) -> Embeddings:
         try:

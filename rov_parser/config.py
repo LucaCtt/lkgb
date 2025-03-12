@@ -6,7 +6,7 @@ load_dotenv()
 
 # Whether to use the Ollama backend for parsing logs.
 # The default is to use the HuggingFace backend instead.
-USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "0")))
+USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "1")))
 
 # The huggingface hub api token to use for downloading models,
 # generated from https://huggingface.co/docs/hub/security-tokens.
@@ -25,6 +25,9 @@ ONTOLOGY_PATH = os.getenv("ONTOLOGY", "ontologies/slogert.ttl")
 NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+
+# Whether to clear the store before parsing logs.
+CLEAR_STORE = bool(int(os.getenv("CLEAR_STORE", "0")))
 
 # The model used to embed logs.
 # Must be a model from the HuggingFace model hub if using the HuggingFace backend,

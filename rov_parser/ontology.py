@@ -1,31 +1,74 @@
+from abc import ABC, abstractmethod
+
 from rdflib import Graph
 
 
 def _get_local_name(uri: str) -> str:
+    """Extract the local name from a URI, e.g., `http://example.org/ontology#Event` -> `Event`.
+
+    Args:
+        uri (str): The URI to extract the local name from.
+
+    Returns:
+        The local name of the URI.
+
+    """
     if isinstance(uri, str) and ("/" in uri or "#" in uri):
         return uri.split("/")[-1].split("#")[-1]  # Handles both "/" and "#" separators
     return uri
 
 
-class SlogertOntology:
-    event_class = "Event"
+class Ontology(ABC):
+    """Abstract class for ontology handling."""
 
-    def __init__(self, path: str, rdf_format: str = "turtle") -> "SlogertOntology":
-        self.g = Graph()
-        self.g.parse(path, format=rdf_format)
+    event_class_name: str
+    """
+    The name of the event class in the ontology.
+    """
 
+    @abstractmethod
     def classes(self) -> list[tuple[str, str]]:
-        """
-        Retrieve a list of (non-event) ontology classes with their descriptions.
-
-        This method executes a SPARQL query to fetch all distinct classes
-        (both `owl:Class` and `rdfs:Class`) from the ontology graph. It also
-        attempts to retrieve optional descriptions for each class.
+        """Retrieve a list of (non-event) ontology classes with their descriptions.
 
         Returns:
             A list of tuples containing the class name and its description.
 
         """
+
+    @abstractmethod
+    def event_properties(self) -> list[tuple[str, str, str]]:
+        """Retrieve a list of ontology properties with their range and description.
+
+        Returns:
+            A list of tuples containing the property name, its range, and its description.
+
+        """
+
+    @abstractmethod
+    def get_event_object_property(self, obj_range: str) -> str | None:
+        """Retrieve an event object property based on the provided range.
+
+        This method executes a SPARQL query to fetch an object property or sub-property
+        that has the provided range.
+
+        Args:
+            obj_range (str): The range of the object property.
+
+        Returns:
+            The name of the object property.
+
+        """
+
+
+class SlogertOntology(Ontology):
+    """Class for handling the Slogert ontology."""
+
+    def __init__(self, path: str, rdf_format: str = "turtle") -> "SlogertOntology":
+        self.g = Graph()
+        self.g.parse(path, format=rdf_format)
+        self.event_class_name = "Event"
+
+    def classes(self) -> list[tuple[str, str]]:
         query = """
             SELECT DISTINCT ?class ?description WHERE {
             { ?class a owl:Class . }
@@ -48,17 +91,6 @@ class SlogertOntology:
         return classes
 
     def event_properties(self) -> list[tuple[str, str, str]]:
-        """
-        Retrieve a list of ontology properties with their descriptions and domains.
-
-        This method executes a SPARQL query to fetch all distinct properties
-        (both `owl:ObjectProperty` and `rdf:Property`) from the ontology graph.
-        It also attempts to retrieve optional descriptions and domains for each property.
-
-        Returns:
-            A list of tuples containing the property name, its description, and its domain.
-
-        """
         props_query = """
             SELECT DISTINCT ?property ?range ?description WHERE {
             { ?property a owl:ObjectProperty . }
@@ -106,19 +138,6 @@ class SlogertOntology:
         return props
 
     def get_event_object_property(self, obj_range: str) -> str | None:
-        """
-        Retrieve an event object property based on the provided range.
-
-        This method executes a SPARQL query to fetch an object property
-        that has the provided range as its domain.
-
-        Args:
-            obj_range (str): The range of the object property.
-
-        Returns:
-            The name of the object property.
-
-        """
         query = f"""
             SELECT DISTINCT ?property WHERE {{
             ?property a owl:ObjectProperty .
@@ -130,6 +149,19 @@ class SlogertOntology:
         """
 
         for row in self.g.query(query):
+            return _get_local_name(str(row[0]))
+
+        sub_props_query = f"""
+            SELECT DISTINCT ?subProperty WHERE {{
+            ?subProperty rdfs:subPropertyOf ?property .
+            ?subProperty rdfs:range <https://w3id.org/sepses/ns/log#{obj_range}> .
+            ?property rdfs:domain <https://w3id.org/sepses/ns/log#Event> .
+            }}
+            ORDER BY DESC(?subProperty)
+            LIMIT 1
+        """
+
+        for row in self.g.query(sub_props_query):
             return _get_local_name(str(row[0]))
 
         return None
