@@ -4,12 +4,12 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-from rov_parser import config
-from rov_parser.backend import HuggingFaceBackend, OllamaBackend
-from rov_parser.ontology import SlogertOntology
-from rov_parser.parser import Parser
-from rov_parser.reports import RunSummary
-from rov_parser.store import Store
+from lkgb import config
+from lkgb.backend import HuggingFaceBackend, OllamaBackend
+from lkgb.ontology import SlogertOntology
+from lkgb.parser import Parser
+from lkgb.reports import RunSummary
+from lkgb.store import Store
 
 # Set up logging format
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")

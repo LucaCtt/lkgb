@@ -9,9 +9,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableWithMessageHistory
 from pydantic import BaseModel, Field
 
-from rov_parser.ontology import Ontology
-from rov_parser.reports import ParserReport
-from rov_parser.store import Store
+from lkgb.ontology import Ontology
+from lkgb.reports import ParserReport
+from lkgb.store import Store
 
 
 class _LogEvent(BaseModel):

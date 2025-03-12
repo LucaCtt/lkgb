@@ -6,7 +6,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_neo4j import Neo4jGraph, Neo4jVector
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
 
-from rov_parser.ontology import Ontology
+from lkgb.ontology import Ontology
 
 
 class Store:

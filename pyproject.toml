@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rov_parser"
+name = "lkgb"
 version = "0.1.0"
 description = ""
 authors = ["Luca Cotti <luca.cotti@unibs.it>"]
