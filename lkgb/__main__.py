@@ -40,6 +40,7 @@ store = Store(
     username=config.NEO4J_USERNAME,
     password=config.NEO4J_PASSWORD,
     embeddings_model=local_embeddings,
+    ontology=logs_ontology,
 )
 
 if config.CLEAR_STORE:
@@ -58,7 +59,8 @@ parser = Parser(
     config.SELF_REFLECTION_STEPS,
 )
 
-if __name__ == "__main__":
+
+def main() -> None:
     logger.info("Reading logs from %s", config.TEST_LOG_PATH)
 
     logs_df = pd.read_csv(config.TEST_LOG_PATH)
@@ -89,3 +91,7 @@ if __name__ == "__main__":
     logger.info("- Average time taken to find similar logs: %s", summary.avg_similar_logs_time_taken())
     logger.info("- Average time taken to generate templates: %s", summary.avg_template_generation_time_taken())
     logger.info("- Average total time taken to parse each log: %s", summary.avg_total_time_taken())
+
+
+if __name__ == "__main__":
+    main()

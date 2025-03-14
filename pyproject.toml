@@ -38,6 +38,9 @@ optional = true
 [tool.poetry.group.ollama.dependencies]
 langchain-ollama = "^0.2.3"
 
+[tool.poetry.scripts]
+dev = "lkgb.__main__:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -51,6 +54,7 @@ select = [
 ignore = [
     "D100",   # ignore missing docs
     "D102",
+    "D103",
     "D104",
     "D107",
     "E402",   # false positives for local imports

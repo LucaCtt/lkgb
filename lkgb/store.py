@@ -73,7 +73,10 @@ class Store:
             params={"value": event},
         )
 
-        return res.single()["template"] if res.single() else None
+        if len(res) == 0:
+            return None
+
+        return res[0]["template"]
 
     def find_similar_events_with_template(self, event: str, score_threshold: float) -> list[Document]:
         """Find logs that are similar to the given log and also have a template.
@@ -108,29 +111,35 @@ class Store:
             template (str): The template string associated with the log.
 
         """
-        self.vector_store.add([event], metadatas=[{"template": template}])
+        log_node = Node(
+            id=str(uuid.uuid4()),
+            type=self.ontology.event_class_name,
+            properties={"value": event, "template": template},
+        )
 
-        log_node = self.graph_store.query(
-            f"""
-            MATCH (l:{self.ontology.event_class_name} {{value: $value}})
-            RETURN l
-            """,
-            params={"value": event},
-        ).single()["l"]
+        names = re.findall(r"<<(.*?)>>", template)
 
-        regex = re.sub(r"<<(.*?)>>", r"(?P<\1>.*?)", template)
-        match = re.match(regex, event)
+        regex = re.sub(r"<<(.*?)>>", r"(.*?)", template)
+        values = list(re.findall(regex, event)[0])
 
-        nodes = [Node(uuid.uuid4(), key, {"value": match.group(key)}) for key in match.groupdict()]
+        nodes = [
+            Node(id=str(uuid.uuid4()), type=name, properties={"value": value})
+            for name, value in zip(names, values, strict=True)
+        ]
 
         relationships = []
         for node in nodes:
             rel = self.ontology.get_event_object_property(node.type)
             if rel:
-                relationships.append(Relationship(log_node, node, rel))
+                relationships.append(Relationship(source=log_node, target=node, type=rel))
+
+        nodes.append(log_node)
+
+        doc = Document(page_content="search_document: " + event, metadata={"template": template})
+        self.vector_store.add_documents([doc])
 
         self.graph_store.add_graph_documents(
-            [GraphDocument(nodes=nodes, relationships=relationships, source=log_node)],
+            [GraphDocument(nodes=nodes, relationships=relationships, source=doc)],
         )
 
     def __compose_similarity_question(self, log: str) -> str:
