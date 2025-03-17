@@ -1,5 +1,5 @@
 from lkgb.backend import Backend
 from lkgb.parser import Parser
-from lkgb.store import Store
+from lkgb.store import OntologyStore
 
-__all__ = ["Backend", "Parser", "Store"]
+__all__ = ["Backend", "OntologyStore", "Parser"]

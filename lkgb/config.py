@@ -15,26 +15,17 @@ HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 # The input path to the logs to parse.
 TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/test.csv")
 
-# The output path to save the parsed logs with templates.
-TEST_OUT_PATH = os.getenv("TEST_OUT_PATH", "data/test_out.csv")
-
-# The path of the ontology used to parse logs.
-ONTOLOGY_PATH = os.getenv("ONTOLOGY", "ontologies/slogert.ttl")
-
 # Neo4j config
 NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-
-# Whether to clear the store before parsing logs.
-CLEAR_STORE = bool(int(os.getenv("CLEAR_STORE", "0")))
 
 # The model used to embed logs.
 # Must be a model from the HuggingFace model hub if using the HuggingFace backend,
 # or a model from the Ollama model hub if using the Ollama backend.
 EMBEDDINGS_MODEL = os.getenv(
     "EMBEDDINGS_MODEL",
-    "nomic-embed-text" if USE_OLLAMA_BACKEND else "nomic-ai/nomic-embed-text-v1.5",
+    "snowflake-arctic-embed:110m" if USE_OLLAMA_BACKEND else "Snowflake/snowflake-arctic-embed-m",
 )
 
 # The model used to parse logs.

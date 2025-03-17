@@ -1,146 +1,111 @@
-import re
-import uuid
+from pathlib import Path
 
-from langchain_core.documents import Document
-from langchain_core.embeddings import Embeddings
-from langchain_neo4j import Neo4jGraph, Neo4jVector
-from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
+from langchain_neo4j import Neo4jGraph
 
-from lkgb.ontology import Ontology
+TIME_ONTOLOGY_URL = "http://www.w3.org/2006/time"
+ONTOLOGY_PATH = "ontologies/log.ttl"
 
 
-class Store:
-    """Store implementation wrapping both the Neo4j graph database and vector index.
-
-    Allows for storing and retrieving text embeddings and graph data.
-    """
-
+class OntologyStore:
     def __init__(
         self,
         url: str,
         username: str,
         password: str,
-        embeddings_model: Embeddings,
-        ontology: Ontology,
-    ) -> "Store":
-        """Initialize the VectorStore with Neo4j connection details and an embeddings model.
-
-        Args:
-            url (str): The URL for connecting to the Neo4j database.
-            username (str): The username for the Neo4j database.
-            password (str): The password for the Neo4j database.
-            embeddings_model (Embeddings): The model used to generate embeddings for the data.
-            ontology (Ontology): The ontology used to infer graph data from log events.
-
-        Attributes:
-            store (Neo4jVector): The Neo4j vector store initialized with the given
-            connection details and embeddings model.
-
-        """
-        self.ontology = ontology
-
+    ) -> "OntologyStore":
         self.graph_store = Neo4jGraph(url=url, username=username, password=password)
 
+        self.__initialize_store()
+
+        """
         self.vector_store = Neo4jVector.from_existing_graph(
             url=url,
             username=username,
             password=password,
             embedding=embeddings_model,
-            node_label=self.ontology.event_class_name,
-            text_node_properties=["value"],
+            node_label=resource_class_name,
+            text_node_properties=["uri"],
             embedding_node_property="embedding",
         )
+        """
+
+    def __initialize_store(self) -> None:
+        # Check if the database contains any Resource nodes,
+        # if there are then the store is already initialized
+        result = self.graph_store.query(
+            """
+            MATCH (n:Resource)
+            RETURN COUNT(n) AS count
+            """,
+        )
+        if result[0]["count"] != 0:
+            return
+
+        # Check if the neosemantics configuration is present,
+        # if not, initialize it
+        result = self.graph_store.query(
+            """
+            MATCH (n:_GraphConfig)
+            RETURN COUNT(n) AS count
+            """,
+        )
+        if result[0]["count"] == 0:
+            self.graph_store.query(
+                """
+                CALL n10s.graphconfig.init();
+                CALL n10s.graphconfig.set({ handleVocabUris: "IGNORE" });
+                """,
+            )
+
+        # Check if uniqueness constraint is present,
+        # if not, initialize it
+        result = self.graph_store.query(
+            """
+            CALL db.constraints() YIELD name
+            WHERE name = 'n10s_unique_uri'
+            RETURN COUNT(*) AS count
+            """,
+        )
+        if result[0]["count"] == 0:
+            self.graph_store.query(
+                """
+                CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE;
+                """,
+            )
+
+        with Path(ONTOLOGY_PATH).open() as f:
+            ontology = f.read()
+            # Load the log ontology
+            self.graph_store.query(
+                f"""
+                WITH '{ontology}' AS ttl
+                CALL n10s.onto.import.inline(ttl, "Turtle",);
+                CALL n10s.onto.import.fetch("{TIME_ONTOLOGY_URL}", "Turtle");
+                """,
+            )
 
     def clear(self) -> None:
-        """Clear the store of all data."""
-        self.graph_store.query("MATCH (n) DETACH DELETE n")
-
-    def get_template(self, event: str) -> str | None:
-        """Get the template associated with a log event.
-
-        Args:
-            event (str): The log event string to get the template for.
-
-        Returns:
-            str: The template associated with the log, or None if no template is found.
-
-        """
-        res = self.graph_store.query(
-            f"""
-            MATCH (l:{self.ontology.event_class_name} {{value: $value}})
-            RETURN l.template AS template
+        self.graph_store.query(
+            """
+            MATCH (n:Resource) DETACH DELETE n;
+            MATCH (n:_GraphConfig) DETACH DELETE n;
+            CALL db.constraints.drop('n10s_unique_uri');
             """,
-            params={"value": event},
         )
 
-        if len(res) == 0:
-            return None
-
-        return res[0]["template"]
-
-    def find_similar_events_with_template(self, event: str, score_threshold: float) -> list[Document]:
-        """Find logs that are similar to the given log and also have a template.
-
-        Args:
-            event (str): The log event string to find similar logs for.
-            score_threshold (float): The similarity score threshold to use for filtering.
-
-        Returns:
-            list[Document]: A list of Document objects that are very similar to the given log.
-
-        """
-        similar = self.vector_store.similarity_search_with_relevance_scores(
-            self.__compose_similarity_question(event),
-            score_threshold=score_threshold,
-            k=3,
-            filter={"template": {"$ne": ""}},
+    def triples(self) -> list[str, str, str]:
+        triples = self.graph_store.query(
+            """
+            MATCH (n:Resource)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Resource)
+            WHERE n.uri STARTS WITH 'https://w3id.org/lkgb'
+            AND m.uri STARTS WITH 'https://w3id.org/lkgb'
+            AND r.uri STARTS WITH 'https://w3id.org/lkgb'
+            RETURN n.name AS subject, r.name AS predicate, m.name AS object
+            UNION
+            MATCH (n:Class)<-[:DOMAIN]-(r:Property)-[:RANGE]->(m:Resource)
+            WHERE n.uri = 'http://www.w3.org/2006/time#Instant'
+            AND m.uri STARTS WITH 'http://www.w3.org/2001/XMLSchema'
+            RETURN n.name AS subject, r.name AS predicate, m.name AS object
+            """,
         )
-        return [doc for doc, _ in similar]
-
-    def add_event(
-        self,
-        event: str,
-        template: str,
-    ) -> None:
-        """Add a new log event to the store, along with its template and associated graph data.
-
-        The graph data will be inferred from the event and template.
-
-        Args:
-            event (str): The log event string to be added to the store.
-            template (str): The template string associated with the log.
-
-        """
-        log_node = Node(
-            id=str(uuid.uuid4()),
-            type=self.ontology.event_class_name,
-            properties={"value": event, "template": template},
-        )
-
-        names = re.findall(r"<<(.*?)>>", template)
-
-        regex = re.sub(r"<<(.*?)>>", r"(.*?)", template)
-        values = list(re.findall(regex, event)[0])
-
-        nodes = [
-            Node(id=str(uuid.uuid4()), type=name, properties={"value": value})
-            for name, value in zip(names, values, strict=True)
-        ]
-
-        relationships = []
-        for node in nodes:
-            rel = self.ontology.get_event_object_property(node.type)
-            if rel:
-                relationships.append(Relationship(source=log_node, target=node, type=rel))
-
-        nodes.append(log_node)
-
-        doc = Document(page_content="search_document: " + event, metadata={"template": template})
-        self.vector_store.add_documents([doc])
-
-        self.graph_store.add_graph_documents(
-            [GraphDocument(nodes=nodes, relationships=relationships, source=doc)],
-        )
-
-    def __compose_similarity_question(self, log: str) -> str:
-        return f"search_query: {log}"
+        return [(row["subject"], row["predicate"], row["object"]) for row in triples]
