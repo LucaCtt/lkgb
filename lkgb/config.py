@@ -10,6 +10,8 @@ USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "1")))
 
 # The huggingface hub api token to use for downloading models,
 # generated from https://huggingface.co/docs/hub/security-tokens.
+# Only useful with the HuggingFace backend and when using private models.
+# For public models, this can be left unset.
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
 # The input path to the logs to parse.

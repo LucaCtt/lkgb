@@ -19,17 +19,20 @@ class _LogGraph(BaseModel):
 
 system_prompt = (
     "## 1. Overview\n"
-    "You are a top-tier algorithm designed for extracting templates with structured node information from log events.\n"
-    "Try to capture as much information from the log event as possible without sacrificing accuracy."
-    "Do not add any information that is not explicitly mentioned in the log.\n"
-    "- **Template**: the full log event where identified nodes are replaced with labels between double angled braces.\n"
-    "- **Nodes** represent entities and concepts of the log event.\n"
-    "## 2. Labeling Nodes\n"
-    "- **Consistency**: Ensure you use available types for nodes and relationship labels, respecting their description."
-    "Ensure you use basic or elementary types for labels."
-    "For example, when you identify a node representing an User, always label it as **'User'**."
-    "Avoid using more specific terms like 'RootUser' or 'Bob'.\n"
-    "## 4. Strict Compliance\n"
+    "You are a top-tier algorithm designed for extracting information"
+    "in structured formats to build a knowledge graph according to an ontology.\n"
+    "Try to capture as much information from the text as possible without sacrificing accuracy."
+    "Do not add any information that is not explicitly mentioned in the text.\n"
+    "- **Triples** represent connections between entities or concepts."
+    "They consist of a subject, predicate, and object.\n"
+    "- The aim is to achieve exhaustiveness in the knowledge graph, making it ontology-compliant.\n"
+    "## 2. Labeling Triples\n"
+    "- The labels for subjects, predicates, and objects should be consistent with the ontology."
+    "- **IDs**: IDs for subjects and objects should be unique and consistent."
+    "- **Consistency**: Ensure you use available types for triples labels."
+    "Ensure you use the most specific types for triples labels.\n"
+    "Ensure consistency and generality in relationship types when constructing knowledge graphs"
+    "## 3. Strict Compliance\n"
     "Adhere to the rules strictly. Non-compliance will result in termination."
 )
 
@@ -116,7 +119,8 @@ class Parser:
         valid_predicates = {pred for _, pred, _ in valid_triples}
         valid_objects = {obj for _, _, obj in valid_triples}
 
-        class _RDFTriple(BaseModel):
+        class _Triple(BaseModel):
+            subject_id: str = Field(description="The ID of the subject.")
             subject_label: str = Field(
                 description=f"The ontology label of the subject, available labels are: {valid_subjects}",
                 enum=valid_subjects,
@@ -128,6 +132,7 @@ class Parser:
                 enum=valid_predicates,
             )
 
+            object_id: str = Field(description="The ID of the object.")
             object_label: str = Field(
                 description=f"The ontology label of the object, available labels are: {valid_objects}",
                 enum=valid_objects,
@@ -145,7 +150,7 @@ class Parser:
                 return self
 
         class DynamicLogGraph(_LogGraph):
-            triples: list[_RDFTriple] = Field(
+            triples: list[_Triple] = Field(
                 description="The RDF graph representing the log event. \
                     Each triple consists of a subject, predicate, and object. \
                     The predicate domain and range are defined in the ontology.",

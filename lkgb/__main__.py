@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+from langchain.globals import set_debug
 from tqdm import tqdm
 
 from lkgb import config
@@ -8,6 +9,8 @@ from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.parser import Parser
 from lkgb.reports import RunSummary
 from lkgb.store import OntologyStore
+
+set_debug(True)
 
 # Set up logging format
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
@@ -27,7 +30,7 @@ else:
     backend = HuggingFaceBackend()
 
 # Load the embeddings model
-local_embeddings = backend.get_embeddings(model=config.EMBEDDINGS_MODEL)
+embeddings = backend.get_embeddings(model=config.EMBEDDINGS_MODEL)
 
 # Create the vector store
 ontology = OntologyStore(
