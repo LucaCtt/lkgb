@@ -1,7 +1,6 @@
 import logging
 
 import pandas as pd
-from langchain.globals import set_debug
 from tqdm import tqdm
 
 from lkgb import config
@@ -9,8 +8,6 @@ from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.parser import Parser
 from lkgb.reports import RunSummary
 from lkgb.store import OntologyStore
-
-set_debug(True)
 
 # Set up logging format
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
@@ -55,13 +52,13 @@ parser = Parser(
 def main() -> None:
     logger.info("Reading logs from %s", config.TEST_LOG_PATH)
 
-    logs_df = pd.read_csv(config.TEST_LOG_PATH)
+    events_df = pd.read_csv(config.TEST_LOG_PATH)
     # To prevent weird stuff with NaNs
-    logs_df = logs_df.fillna("")
+    events_df = events_df.fillna("")
 
     reports = []
-    for log in tqdm(logs_df["text"], desc="Processing logs", colour="blue"):
-        report = parser.parse(log)
+    for event in tqdm(events_df["Log Event"], desc="Processing logs", colour="blue"):
+        report = parser.parse(event)
         reports.append(report)
 
     logger.info("Log parsing done.")

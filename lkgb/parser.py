@@ -1,4 +1,4 @@
-from typing import Self, cast
+from typing import cast
 
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.documents import Document
@@ -6,33 +6,34 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableWithMessageHistory
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from lkgb.reports import ParserReport
 from lkgb.store import OntologyStore
 from lkgb.tools import fetch_ip_address_info
 
 
-class _LogGraph(BaseModel):
-    triples: list = Field(description="The RDF graph representing the log event.")
+class _EventGraph(BaseModel):
+    triples: list = Field(description="The triples representing the event.")
 
 
 system_prompt = (
     "## 1. Overview\n"
-    "You are a top-tier algorithm designed for extracting information"
+    "You are a top-tier algorithm designed for extracting information from a log event "
     "in structured formats to build a knowledge graph according to an ontology.\n"
-    "Try to capture as much information from the text as possible without sacrificing accuracy."
-    "Do not add any information that is not explicitly mentioned in the text.\n"
+    "Try to capture as much information from the event as possible without sacrificing accuracy."
+    "Only add information that is defined in the ontology.\n"
+    "Do not add any information that is not explicitly mentioned in the event.\n"
+    "## 2. Knowledge Graph\n"
     "- **Triples** represent connections between entities or concepts."
-    "They consist of a subject, predicate, and object.\n"
+    "They consist of a subject, predicate, and object. The subject and object have an id, a label, and a value."
+    "The predicate has just a label.\n"
     "- The aim is to achieve exhaustiveness in the knowledge graph, making it ontology-compliant.\n"
-    "## 2. Labeling Triples\n"
-    "- The labels for subjects, predicates, and objects should be consistent with the ontology."
-    "- **IDs**: IDs for subjects and objects should be unique and consistent."
-    "- **Consistency**: Ensure you use available types for triples labels."
-    "Ensure you use the most specific types for triples labels.\n"
-    "Ensure consistency and generality in relationship types when constructing knowledge graphs"
-    "## 3. Strict Compliance\n"
+    "## 3. Labels\n"
+    "- **Consistency**: The labels for subjects, predicates, and objects must be consistent with the ontology. "
+    "Ensure you use available types for the labels."
+    "- **IDs**: IDs for subjects and objects must be unique and consistent."
+    "## 4. Strict Compliance\n"
     "Adhere to the rules strictly. Non-compliance will result in termination."
 )
 
@@ -42,7 +43,7 @@ gen_graph_prompt = ChatPromptTemplate.from_messages(
             "system",
             system_prompt,
         ),
-        ("human", "Log: '{log}'"),
+        ("human", "Event: '{log}'"),
         ("placeholder", "{messages}"),
     ],
 )
@@ -51,7 +52,7 @@ gen_graph_prompt = ChatPromptTemplate.from_messages(
 def _get_examples(similar_logs: list[Document]) -> list[BaseMessage]:
     def get_example_group(log: str, template: str) -> list[BaseMessage]:
         return [
-            HumanMessage(f"Log: '{log}", name="example_user"),
+            HumanMessage(f"Event: '{log}", name="example_user"),
             AIMessage(
                 "",
                 name="example_assistant",
@@ -96,7 +97,7 @@ class Parser:
         self.self_reflection_steps = self_reflection_steps
 
         try:
-            parser_model.with_structured_output(_LogGraph)
+            parser_model.with_structured_output(_EventGraph)
         except NotImplementedError as e:
             msg = "The parser model must support structured output."
             raise ValueError(msg) from e
@@ -112,51 +113,52 @@ class Parser:
             history_messages_key="messages",
         )
 
-    def __create_graph_structure(self) -> type[_LogGraph]:
+    def __create_graph_structure(self) -> type[_EventGraph]:
         valid_triples = self.ontology.triples()
 
         valid_subjects = {subj for subj, _, _ in valid_triples}
         valid_predicates = {pred for _, pred, _ in valid_triples}
         valid_objects = {obj for _, _, obj in valid_triples}
 
-        class _Triple(BaseModel):
-            subject_id: str = Field(description="The ID of the subject.")
-            subject_label: str = Field(
+        class _Subject(BaseModel):
+            id: str = Field(description="The ID of the subject.")
+            label: str = Field(
                 description=f"The ontology label of the subject, available labels are: {valid_subjects}",
                 enum=valid_subjects,
             )
-            subject_value: str = Field(description="The value of the subject.")
+            value: str | None = Field(description="The value of the subject.", default=None)
 
-            predicate_label: str = Field(
+        class _Predicate(BaseModel):
+            label: str = Field(
                 description=f"The ontology label of the predicate, available labels are: {valid_predicates}",
                 enum=valid_predicates,
             )
 
-            object_id: str = Field(description="The ID of the object.")
-            object_label: str = Field(
+        class _Object(BaseModel):
+            id: str = Field(description="The ID of the object.")
+            label: str = Field(
                 description=f"The ontology label of the object, available labels are: {valid_objects}",
                 enum=valid_objects,
             )
-            object_value: str = Field(description="The value of the object.")
+            value: str | None = Field(description="The value of the object.", default=None)
 
-            @model_validator(mode="after")
-            def check_valid_combination(self) -> Self:
-                if (self.subject_label, self.predicate_label, self.object_label) not in valid_triples:
-                    msg = (
-                        "Invalid triple combination: ",
-                        f"({self.subject_label}, {self.predicate_label}, {self.object_label})",
-                    )
-                    raise ValueError(msg)
-                return self
+        class _Triple(BaseModel):
+            subject: _Subject = Field(description="The subject of the triple.")
+            predicate: _Predicate = Field(description="The predicate of the triple.")
+            object: _Object = Field(description="The object of the triple.")
 
-        class DynamicLogGraph(_LogGraph):
-            triples: list[_Triple] = Field(
-                description="The RDF graph representing the log event. \
-                    Each triple consists of a subject, predicate, and object. \
-                    The predicate domain and range are defined in the ontology.",
-            )
+        class DynamicEventGraph(_EventGraph):
+            triples: list[_Triple] = Field(description="The triples representing the event.")
 
-        return DynamicLogGraph
+        DynamicEventGraph.__doc__ = (
+            "Your task is to extract triples from text strictly adhering "
+            "to the provided schema. The relationships can only appear "
+            "between specific node types are presented in the schema format "
+            "like: (subject label, relationship label, entity label) /n"
+            f"Provided schema is {[f'({subj},{pred},{obj})' for subj, pred, obj in valid_triples]}"
+        )
+
+        return DynamicEventGraph
 
     def parse(self, log: str) -> ParserReport:
         """Given a log, this function identifies and updates the template for the log and also for similar logs.
@@ -181,9 +183,6 @@ class Parser:
         )
 
         raw_schema = cast(dict, raw_schema)
-        triples = raw_schema["parsed"].triples
+        triples = raw_schema.triples
 
-        report.template_generation_done()
-
-        print(triples)  # noqa: T201
         return report.finish()

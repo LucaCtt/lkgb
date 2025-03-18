@@ -15,7 +15,7 @@ USE_OLLAMA_BACKEND = bool(int(os.getenv("USE_OLLAMA_BACKEND", "1")))
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
 # The input path to the logs to parse.
-TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "data/test.csv")
+TEST_LOG_PATH = os.getenv("TEST_LOG_PATH", "test/logs.csv")
 
 # Neo4j config
 NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")

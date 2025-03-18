@@ -1,0 +1,52 @@
+# Generated on 2025-03-13T21:06:25.884425+00:00
+Device,Application,File,Log Event
+davey_mail,,syslog.1.csv,Jan 24 15:05:29 davey-mail dovecot: imap(andrea.moss): Logged out in=522 out=8393
+davey_mail,exim4,mainlog.3.csv,2022-01-22 10:09:58 1nBDLK-0004Mk-Bf Completed
+morris_mail,,syslog.4.csv,Jan 21 02:39:01 morris-mail systemd[1]: Started Clean php session files.
+inet-dns,,dnsmasq.log.csv,Jan 20 11:24:07 dnsmasq[3433]: query[AAAA] security.ubuntu.com from 192.168.230.4
+vpn,,syslog.2.csv,Jan 24 03:01:32 vpn kernel: [316107.925699] neighbour: arp_cache: neighbor table overflow!
+inet-dns,,syslog.csv,Jan 25 07:02:56 inet-dns systemd[16937]: Reached target Sockets.
+cloud_share,,auth.log.csv,Jan 24 15:15:01 cloud-share CRON[12944]: pam_unix(cron:session): session opened for user www-data by (uid=0)
+webserver,suricata,stats.log.csv,"Date: 1/20/2022 -- 13:28:33 (uptime: 0d, 00h 12m 10s)"
+morris_mail,horde,horde-access.log.csv,"192.168.231.68 - - [24/Jan/2022:07:39:06 +0000] ""-"" 408 152 ""-"" ""-"""
+morris_mail,,syslog.4.csv,Jan 22 04:22:43 morris-mail freshclam[29586]: Sat Jan 22 04:22:43 2022 -> Received signal: wake up
+mail,exim4,mainlog.3.csv,2022-01-22 10:58:27 End queue run: pid=20469
+inet-firewall,,shorewall-init.log.1.csv,Jan 20 11:22:30 ..End Macro /usr/share/shorewall/macro.Ping
+webserver,audit,audit.log.csv,type=LOGIN msg=audit(1642835821.839:1081): pid=12171 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=155 res=1
+intranet_server,apache2,intranet.smith.russellmitchell.com-access.log.1.csv,"10.143.2.4 - - [24/Jan/2022:13:01:51 +0000] ""GET / HTTP/1.1"" 200 9138 ""-"" ""WordPress/5.8.3; https://intranet.smith.russellmitchell.com"""
+mail,suricata,suricata.log.1.csv,20/1/2022 -- 13:12:57 - <Warning> - [ERRCODE: SC_ERR_NO_RULES(42)] - No rule files match the pattern /etc/suricata/rules/emerging-misc.rules
+inet-firewall,,kern.log.1.csv,Jan 20 11:12:27 inet-firewall kernel: [    0.166918] pci_bus 0000:00: root bus resource [mem 0xc0000000-0xfebfffff window]
+intranet_server,apache2,error.log.2.csv,rm: cannot remove 'john.pot': No such file or directory
+vpn,,openvpn.log.csv,2022-01-24 13:11:54 ahayes/192.168.231.127:38870 MULTI: primary virtual IP for ahayes/192.168.231.127:38870: 10.9.0.18
+cloud_share,suricata,suricata.log.csv,"20/1/2022 -- 13:16:29 - <Error> - [ERRCODE: SC_ERR_UNDEFINED_VAR(101)] - Variable ""SQL_SERVERS"" is not defined in configuration file"
+webserver,suricata,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Config> - Adding interface ens3 from config file
+morris_mail,,syslog.4.csv,Jan 20 12:19:29 morris-mail php-horde-lz4: php_invoke horde_lz4: already enabled for PHP 7.0 cli sapi
+inet-firewall,suricata,suricata.log.csv,25/1/2022 -- 06:57:00 - <Notice> - Signal Received.  Stopping engine.
+cloud_share,redis,redis.log.csv,25792:M 24 Jan 13:17:54.117 * Background saving terminated with success
+webserver,apache2,error.log.4.csv,"[Sat Jan 22 06:25:12.590873 2022] [mpm_prefork:notice] [pid 29640] AH00171: Graceful restart requested, doing restart"
+internal_share,,syslog.2.csv,Jan 23 08:28:14 internal-share 50-motd-news[30824]:  * Super-optimized for small spaces - read how we shrank the memory
+cloud_share,apache2,error.log.3.csv,mkdir failed on directory /var/run/samba/msg.lock: Permission denied
+internal_share,,syslog.1.csv,Jan 24 17:02:30 internal-share systemd[1]: Starting Message of the Day...
+webserver,suricata,suricata.log.csv,20/1/2022 -- 13:12:35 - <Perf> - using shared mpm ctx' for other-ip
+mail,exim4,mainlog.2.csv,2022-01-23 12:31:06 1nBc1S-00083V-FN Completed
+intranet_server,apache2,error.log.2.csv,guesses: 1  time: 0:00:37:09 100.00% (ETA: Mon Jan 24 04:36:57 2022)  c/s: 448  trying: buddie13 - budakid1
+inet-firewall,,dnsmasq.log.csv,Jan 21 04:45:13 dnsmasq[3468]: reply tivan.naver.com is <CNAME>
+cloud_share,suricata,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Info> - Found an MTU of 1450 for 'ens3'
+intranet_server,,syslog.4.csv,Jan 21 06:31:45 intranet-server systemd[1]: Stopping udev Kernel Device Manager...
+davey_mail,,auth.log.1.csv,"Jan 20 11:58:46 davey-mail groupadd[5172]: group added to /etc/group: name=Debian-exim, GID=113"
+cloud_share,suricata,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Config> - luajit states preallocated: 128
+intranet_server,apache2,error.log.2.csv,"HTTP request sent, awaiting response... 200 OK"
+vpn,,openvpn.log.csv,2022-01-22 17:58:41 ahayes/192.168.231.127:40321 Outgoing Data Channel: Cipher 'AES-256-CBC' initialized with 256 bit key
+intranet_server,apache2,error.log.3.csv,[Sat Jan 22 06:25:04.223105 2022] [core:notice] [pid 449] AH00094: Command line: '/usr/sbin/apache2'
+davey_mail,exim4,mainlog.3.csv,2022-01-22 13:15:00 1nBGEO-0004mx-SQ => shane.watson <shane.watson@davey.russellmitchell.com> R=local_user T=maildir_home
+cloud_share,,syslog.4.csv,Jan 21 06:11:25 cloud-share systemd-networkd[31898]: ens3: IPv6 successfully enabled
+webserver,suricata,suricata.log.csv,"20/1/2022 -- 13:16:23 - <Config> - eve-log dns version not set, defaulting to version 2"
+mail,,user.log.csv,"Jan 23 11:57:40 mail HORDE: [horde] Login success for toby.white to horde (172.19.130.68) [pid 30393 on line 163 of ""/usr/share/horde/login.php""]"
+webserver,,syslog.1.csv,"Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection."
+intranet_server,apache2,intranet.smith.russellmitchell.com-access.log.2.csv,"172.19.131.174 - - [24/Jan/2022:03:57:30 +0000] ""GET /docebo HTTP/1.1"" 404 363 ""-"" ""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"""
+inet-firewall,suricata,suricata.log.csv,20/1/2022 -- 13:16:38 - <Perf> - Unique rule groups: 110
+davey_mail,,auth.log.1.csv,Jan 20 11:25:39 davey-mail sshd[1127]: pam_unix(sshd:session): session closed for user ait
+internal_share,,syslog.4.csv,Jan 21 06:20:00 internal-share apport[1782]:    ...done.
+internal_share,,syslog.2.csv,Jan 24 03:57:15 internal-share smbd[18540]:   read_fd_with_timeout failed for client 172.19.131.174 read error = NT_STATUS_END_OF_FILE.
+internal_share,,auth.log.csv,Jan 24 03:57:04 internal-share sshd[18542]: Did not receive identification string from 172.19.131.174 port 45920
+webserver,,syslog.4.csv,Jan 21 06:34:55 webserver os-prober: debug: running /usr/lib/os-probes/mounted/80minix on mounted /dev/vda15
