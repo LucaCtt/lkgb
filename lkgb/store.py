@@ -1,9 +1,10 @@
 from pathlib import Path
 
 from langchain_neo4j import Neo4jGraph
+from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
 
 TIME_ONTOLOGY_URL = "http://www.w3.org/2006/time"
-ONTOLOGY_PATH = "ontologies/log.ttl"
+ONTOLOGY_PATH = "ontologies/logs.ttl"
 
 
 class OntologyStore:
@@ -51,17 +52,17 @@ class OntologyStore:
         )
         if result[0]["count"] == 0:
             self.graph_store.query(
-                """
-                CALL n10s.graphconfig.init();
-                CALL n10s.graphconfig.set({ handleVocabUris: "IGNORE" });
-                """,
+                "CALL n10s.graphconfig.init()",
+            )
+            self.graph_store.query(
+                "CALL n10s.graphconfig.set({ handleVocabUris: 'IGNORE' })",
             )
 
         # Check if uniqueness constraint is present,
         # if not, initialize it
         result = self.graph_store.query(
             """
-            CALL db.constraints() YIELD name
+            SHOW CONSTRAINTS YIELD name
             WHERE name = 'n10s_unique_uri'
             RETURN COUNT(*) AS count
             """,
@@ -69,43 +70,60 @@ class OntologyStore:
         if result[0]["count"] == 0:
             self.graph_store.query(
                 """
-                CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE;
+                CREATE CONSTRAINT n10s_unique_uri FOR (r:Resource) REQUIRE r.uri IS UNIQUE;
                 """,
             )
 
-        with Path(ONTOLOGY_PATH).open() as f:
-            ontology = f.read()
-            # Load the log ontology
-            self.graph_store.query(
-                f"""
-                WITH '{ontology}' AS ttl
-                CALL n10s.onto.import.inline(ttl, "Turtle",);
-                CALL n10s.onto.import.fetch("{TIME_ONTOLOGY_URL}", "Turtle");
-                """,
-            )
-
-    def clear(self) -> None:
+        ontology = Path(ONTOLOGY_PATH).read_text()
+        # Load the log ontology
         self.graph_store.query(
-            """
-            MATCH (n:Resource) DETACH DELETE n;
-            MATCH (n:_GraphConfig) DETACH DELETE n;
-            CALL db.constraints.drop('n10s_unique_uri');
+            f"""
+            CALL n10s.onto.import.inline('{ontology}', "Turtle")
             """,
         )
+        self.graph_store.query(f"CALL n10s.onto.import.fetch('{TIME_ONTOLOGY_URL}', 'Turtle')")
 
-    def triples(self) -> list[str, str, str]:
+    def clear(self) -> None:
+        self.graph_store.query("MATCH (n:Resource) DETACH DELETE n")
+        self.graph_store.query("MATCH (n:_GraphConfig) DETACH DELETE n")
+        self.graph_store.query("DROP CONSTRAINT n10s_unique_uri")
+
+    def graph(self) -> GraphDocument:
+        nodes_with_props = self.graph_store.query(
+            """
+            MATCH (c:Class)<-[:DOMAIN]-(p:Property)
+            WHERE c.uri STARTS WITH 'https://w3id.org/lkgb' OR c.uri = 'http://www.w3.org/2006/time#Instant'
+            WITH c.name AS class, elementID(c) as id, COLLECT([p.name, p.comment]) AS pairs
+            RETURN class, id, apoc.map.fromPairs(pairs) AS properties
+            """,
+        )
+        nodes_dict = [
+            {row["id"]: Node(id=row["id"], name=row["class"], properties=row["properties"])} for row in nodes_with_props
+        ]
+
         triples = self.graph_store.query(
             """
             MATCH (n:Resource)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Resource)
             WHERE n.uri STARTS WITH 'https://w3id.org/lkgb'
             AND m.uri STARTS WITH 'https://w3id.org/lkgb'
             AND r.uri STARTS WITH 'https://w3id.org/lkgb'
-            RETURN n.name AS subject, r.name AS predicate, m.name AS object
+            RETURN elementID(n) AS subject_id, r.name AS predicate, elementID(m) AS object_id
             UNION
             MATCH (n:Class)<-[:DOMAIN]-(r:Property)-[:RANGE]->(m:Resource)
             WHERE n.uri = 'http://www.w3.org/2006/time#Instant'
             AND m.uri STARTS WITH 'http://www.w3.org/2001/XMLSchema'
-            RETURN n.name AS subject, r.name AS predicate, m.name AS object
+            RETURN elementID(n) AS subject_id, r.name AS predicate, elementID(m) AS object_id
             """,
         )
-        return [(row["subject"], row["predicate"], row["object"]) for row in triples]
+        relationships = [
+            Relationship(
+                source=nodes_dict[row["subject_id"]],
+                target=nodes_dict[row["object_id"]],
+                type=row["predicate"],
+            )
+            for row in triples
+        ]
+
+        return GraphDocument(
+            nodes=[node for nodes in nodes_dict for node in nodes.values()], relationships=relationships,
+        )
