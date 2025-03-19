@@ -121,185 +121,185 @@
   rdfs:range xsd:string;
   rdfs:comment "MAC address associated with the address".
 
-  ###  https://w3id.org/lkgb/log#port
-  :port rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:integer;
-    rdfs:comment "Port".
+###  https://w3id.org/lkgb/log#port
+:port rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:integer;
+  rdfs:comment "Port".
 
-  ###  https://w3id.org/lkgb/log#city
-  :city rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "City in which the address is located".
+###  https://w3id.org/lkgb/log#city
+:city rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "City in which the address is located".
 
-  ###  https://w3id.org/lkgb/log#region
-  :region rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "Region in which the address is located".
+###  https://w3id.org/lkgb/log#region
+:region rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "Region in which the address is located".
 
-  ###  https://w3id.org/lkgb/log#country
-  :country rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "Country in which the address is located".
+###  https://w3id.org/lkgb/log#country
+:country rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "Country in which the address is located".
 
-  ###  https://w3id.org/lkgb/log#timezone
-  :timezone rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "Timezone in which the address is located".
+###  https://w3id.org/lkgb/log#timezone
+:timezone rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "Timezone in which the address is located".
 
-  ###  https://w3id.org/lkgb/log#address.asn
-  :asn rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "Autonomous System Number associated with the address".
+###  https://w3id.org/lkgb/log#address.asn
+:asn rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "Autonomous System Number associated with the address".
 
-  ###  https://w3id.org/lkgb/log#address.org
-  :org rdf:type owl:DatatypeProperty;
-    rdfs:domain :Address;
-    rdfs:range xsd:string;
-    rdfs:comment "Organization associated with the address".
+###  https://w3id.org/lkgb/log#address.org
+:org rdf:type owl:DatatypeProperty;
+  rdfs:domain :Address;
+  rdfs:range xsd:string;
+  rdfs:comment "Organization associated with the address".
 
-  ###  https://w3id.org/lkgb/log#appname
-  :appname rdf:type owl:DatatypeProperty;
-    rdfs:domain :Application;
-    rdfs:range xsd:string;
-    rdfs:comment "Application name".
+###  https://w3id.org/lkgb/log#appname
+:appname rdf:type owl:DatatypeProperty;
+  rdfs:domain :Application;
+  rdfs:range xsd:string;
+  rdfs:comment "Application name".
 
-  ###  https://w3id.org/lkgb/log#vendor
-  :vendor rdf:type owl:DatatypeProperty;
-    rdfs:domain :Application;
-    rdfs:range xsd:string;
-    rdfs:comment "Application vendor".
+###  https://w3id.org/lkgb/log#vendor
+:vendor rdf:type owl:DatatypeProperty;
+  rdfs:domain :Application;
+  rdfs:range xsd:string;
+  rdfs:comment "Application vendor".
 
-  ###  https://w3id.org/lkgb/log#version
-  :version rdf:type owl:DatatypeProperty;
-    rdfs:domain :Application;
-    rdfs:range xsd:string;
-    rdfs:comment "Application version".
+###  https://w3id.org/lkgb/log#version
+:version rdf:type owl:DatatypeProperty;
+  rdfs:domain :Application;
+  rdfs:range xsd:string;
+  rdfs:comment "Application version".
 
-  ###  https://w3id.org/lkgb/log#hashmd5
-  :hashmd5 rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:string;
-    rdfs:comment "File MD5 Hashsum".
+###  https://w3id.org/lkgb/log#hashmd5
+:hashmd5 rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:string;
+  rdfs:comment "File MD5 Hashsum".
 
-  ###  https://w3id.org/lkgb/log#line
-  :line rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:integer;
-    rdfs:comment "File line number".
+###  https://w3id.org/lkgb/log#line
+:line rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:integer;
+  rdfs:comment "File line number".
 
-  ###  https://w3id.org/lkgb/log#mode
-  :mode rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:string;
-    rdfs:comment "File mode flags".
+###  https://w3id.org/lkgb/log#mode
+:mode rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:string;
+  rdfs:comment "File mode flags".
 
-  ###  https://w3id.org/lkgb/log#filename
-  :filename rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:string;
-    rdfs:comment "File name".
+###  https://w3id.org/lkgb/log#filename
+:filename rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:string;
+  rdfs:comment "File name".
 
-  ###  https://w3id.org/lkgb/log#path
-  :path rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:string;
-    rdfs:comment "File system path".
+###  https://w3id.org/lkgb/log#path
+:path rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:string;
+  rdfs:comment "File system path".
 
-  ###  https://w3id.org/lkgb/log#permissions
-  :permissions rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:string;
-    rdfs:comment "File permissions".
+###  https://w3id.org/lkgb/log#permissions
+:permissions rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:string;
+  rdfs:comment "File permissions".
 
-  ###  https://w3id.org/lkgb/log#size
-  :size rdf:type owl:DatatypeProperty;
-    rdfs:domain :File;
-    rdfs:range xsd:integer;
-    rdfs:comment "File size in octets".
+###  https://w3id.org/lkgb/log#size
+:size rdf:type owl:DatatypeProperty;
+  rdfs:domain :File;
+  rdfs:range xsd:integer;
+  rdfs:comment "File size in octets".
 
-  ###  https://w3id.org/lkgb/log#command
-  :command rdf:type owl:DatatypeProperty;
-    rdfs:domain :Event;
-    rdfs:range xsd:string;
-    rdfs:comment "Command".
+###  https://w3id.org/lkgb/log#command
+:command rdf:type owl:DatatypeProperty;
+  rdfs:domain :Event;
+  rdfs:range xsd:string;
+  rdfs:comment "Command".
 
-  ###  https://w3id.org/lkgb/log#message
-  :message rdf:type owl:DatatypeProperty;
-    rdfs:domain :Event;
-    rdfs:range xsd:string;
-    rdfs:comment "Event message".
+###  https://w3id.org/lkgb/log#message
+:message rdf:type owl:DatatypeProperty;
+  rdfs:domain :Event;
+  rdfs:range xsd:string;
+  rdfs:comment "Event message".
 
-  ###  https://w3id.org/sepses/ns/log#priority
-  :priority rdf:type owl:DatatypeProperty;
-    rdfs:domain :Event;
-    rdfs:range xsd:string;
-    rdfs:comment "Event priority (e.g. ERROR, WARN, DEBUG, CRIT)".
+###  https://w3id.org/lkgb/log#priority
+:priority rdf:type owl:DatatypeProperty;
+  rdfs:domain :Event;
+  rdfs:range xsd:string;
+  rdfs:comment "Event priority (e.g. ERROR, WARN, DEBUG, CRIT)".
 
-  ###  https://w3id.org/sepses/ns/log#pid
-  :pid rdf:type owl:DatatypeProperty;
-    rdfs:domain :Process;
-    rdfs:range xsd:integer;
-    rdfs:comment "Process ID (pid)".
+###  https://w3id.org/lkgb/log#pid
+:pid rdf:type owl:DatatypeProperty;
+  rdfs:domain :Process;
+  rdfs:range xsd:integer;
+  rdfs:comment "Process ID (pid)".
 
-  ###  https://w3id.org/sepses/ns/log#processname
-  :processname rdf:type owl:DatatypeProperty;
-    rdfs:domain :Process;
-    rdfs:range xsd:string;
-    rdfs:comment "Process name".
+###  https://w3id.org/lkgb/log#processname
+:processname rdf:type owl:DatatypeProperty;
+  rdfs:domain :Process;
+  rdfs:range xsd:string;
+  rdfs:comment "Process name".
 
-  ###  https://w3id.org/sepses/ns/log#tid
-  :tid rdf:type owl:DatatypeProperty;
-    rdfs:domain :Process;
-    rdfs:range xsd:integer;
-    rdfs:comment "Thread identifier of the process".
+###  https://w3id.org/lkgb/log#tid
+:tid rdf:type owl:DatatypeProperty;
+  rdfs:domain :Process;
+  rdfs:range xsd:integer;
+  rdfs:comment "Thread identifier of the process".
 
-  ###  https://w3id.org/lkgb/log#param
-  :param rdf:type owl:DatatypeProperty;
-    rdfs:domain :URL;
-    rdfs:range xsd:string;
-    rdfs:comment "URL parameter".
+###  https://w3id.org/lkgb/log#param
+:param rdf:type owl:DatatypeProperty;
+  rdfs:domain :URL;
+  rdfs:range xsd:string;
+  rdfs:comment "URL parameter".
 
-  ###  https://w3id.org/lkgb/log#url
-  :url rdf:type owl:DatatypeProperty;
-    rdfs:domain :URL;
-    rdfs:range xsd:string;
-    rdfs:comment "Complete URL".
+###  https://w3id.org/lkgb/log#url
+:url rdf:type owl:DatatypeProperty;
+  rdfs:domain :URL;
+  rdfs:range xsd:string;
+  rdfs:comment "Complete URL".
 
-  ###  https://w3id.org/lkgb/log#domain
-  :domain rdf:type owl:DatatypeProperty;
-    rdfs:domain :User;
-    rdfs:range xsd:string;
-    rdfs:comment "User account NT domain".
+###  https://w3id.org/lkgb/log#domain
+:domain rdf:type owl:DatatypeProperty;
+  rdfs:domain :User;
+  rdfs:range xsd:string;
+  rdfs:comment "User account NT domain".
 
-  ###  https://w3id.org/lkgb/log#gid
-  :gid rdf:type owl:DatatypeProperty;
-    rdfs:domain :User;
-    rdfs:range xsd:integer;
-    rdfs:comment "User account group ID (gid)".
+###  https://w3id.org/lkgb/log#gid
+:gid rdf:type owl:DatatypeProperty;
+  rdfs:domain :User;
+  rdfs:range xsd:integer;
+  rdfs:comment "User account group ID (gid)".
 
-  ###  https://w3id.org/lkgb/log#groupname
-  :groupname rdf:type owl:DatatypeProperty;
-    rdfs:domain :User;
-    rdfs:range xsd:string;
-    rdfs:comment "User account group name".
+###  https://w3id.org/lkgb/log#groupname
+:groupname rdf:type owl:DatatypeProperty;
+  rdfs:domain :User;
+  rdfs:range xsd:string;
+  rdfs:comment "User account group name".
 
-  ###  https://w3id.org/lkgb/log#uid
-  :uid rdf:type owl:DatatypeProperty;
-    rdfs:domain :User;
-    rdfs:range xsd:integer;
-    rdfs:comment "User account ID (uid)".
+###  https://w3id.org/lkgb/log#uid
+:uid rdf:type owl:DatatypeProperty;
+  rdfs:domain :User;
+  rdfs:range xsd:integer;
+  rdfs:comment "User account ID (uid)".
 
-  ###  https://w3id.org/lkgb/log#username
-  :username rdf:type owl:DatatypeProperty;
-    rdfs:domain :User;
-    rdfs:range xsd:string;
-    rdfs:comment "User account name".
+###  https://w3id.org/lkgb/log#username
+:username rdf:type owl:DatatypeProperty;
+  rdfs:domain :User;
+  rdfs:range xsd:string;
+  rdfs:comment "User account name".
 
 #################################################################
 #    Classes

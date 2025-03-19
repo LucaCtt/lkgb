@@ -48,9 +48,9 @@ if PARSER_TEMPERATURE < 0 or PARSER_TEMPERATURE > 1:
     raise ValueError(msg)
 
 # The number of self-reflection steps to take.
-# Must be greater than 0.
-SELF_REFLECTION_STEPS = int(os.getenv("SELF_REFLECTION_STEPS", "2"))
+# Must be greater or equal to 0.
+SELF_REFLECTION_STEPS = int(os.getenv("SELF_REFLECTION_STEPS", "3"))
 
-if SELF_REFLECTION_STEPS <= 0:
+if SELF_REFLECTION_STEPS < 0:
     msg = "SELF_REFLECTION_STEPS must be greater than 0"
     raise ValueError(msg)

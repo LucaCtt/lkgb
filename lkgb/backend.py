@@ -83,7 +83,7 @@ class OllamaBackend(Backend):
         try:
             from langchain_ollama.chat_models import ChatOllama  # type: ignore[import]
 
-            return ChatOllama(model=model, temperature=temperature)
+            return ChatOllama(model=model, temperature=temperature, num_ctx=1024*12)
         except ModuleNotFoundError as e:
             msg = "Please install langchain-ollama to use OllamaBackend"
             raise ImportError(msg) from e

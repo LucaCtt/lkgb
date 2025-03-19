@@ -52,7 +52,7 @@ parser = Parser(
 def main() -> None:
     logger.info("Reading logs from %s", config.TEST_LOG_PATH)
 
-    events_df = pd.read_csv(config.TEST_LOG_PATH)
+    events_df = pd.read_csv(config.TEST_LOG_PATH, comment="#")
     # To prevent weird stuff with NaNs
     events_df = events_df.fillna("")
 

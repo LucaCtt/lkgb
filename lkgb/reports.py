@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+from langchain_neo4j.graphs.graph_document import GraphDocument
+
 
 class ParserReport:
     """A class to generate and manage reports for parsing operations.
@@ -7,19 +9,26 @@ class ParserReport:
     All of the dates and times are in UTC.
     """
 
+    graph: GraphDocument = None
+
     def __init__(
         self,
     ) -> "ParserReport":
         self.start_dt = datetime.now(tz=UTC)
 
-    def finish(self) -> "ParserReport":
+    def finish(self, graph: GraphDocument) -> "ParserReport":
         """Mark the end of the parsing process by setting the end datetime.
+
+        Args:
+            graph (GraphDocument): The graph document created by the parser.
 
         Returns:
             ParserReport: The instance of the ParserReport with the updated end datetime.
 
         """
         self.end_dt = datetime.now(tz=UTC)
+        self.graph = graph
+
         return self
 
     def total_time_taken(self) -> float:

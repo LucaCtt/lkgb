@@ -91,27 +91,23 @@ class OntologyStore:
     def graph(self) -> GraphDocument:
         nodes_with_props = self.graph_store.query(
             """
-            MATCH (c:Class)<-[:DOMAIN]-(p:Property)
+            MATCH (c:Class)
             WHERE c.uri STARTS WITH 'https://w3id.org/lkgb' OR c.uri = 'http://www.w3.org/2006/time#Instant'
+            OPTIONAL MATCH (c)<-[:DOMAIN]-(p:Property)
             WITH c.name AS class, elementID(c) as id, COLLECT([p.name, p.comment]) AS pairs
             RETURN class, id, apoc.map.fromPairs(pairs) AS properties
             """,
         )
-        nodes_dict = [
-            {row["id"]: Node(id=row["id"], name=row["class"], properties=row["properties"])} for row in nodes_with_props
-        ]
+        nodes_dict = {
+            row["id"]: Node(id=row["id"], type=row["class"], properties=row["properties"]) for row in nodes_with_props
+        }
 
         triples = self.graph_store.query(
             """
-            MATCH (n:Resource)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Resource)
+            MATCH (n:Class)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Class)
             WHERE n.uri STARTS WITH 'https://w3id.org/lkgb'
             AND m.uri STARTS WITH 'https://w3id.org/lkgb'
             AND r.uri STARTS WITH 'https://w3id.org/lkgb'
-            RETURN elementID(n) AS subject_id, r.name AS predicate, elementID(m) AS object_id
-            UNION
-            MATCH (n:Class)<-[:DOMAIN]-(r:Property)-[:RANGE]->(m:Resource)
-            WHERE n.uri = 'http://www.w3.org/2006/time#Instant'
-            AND m.uri STARTS WITH 'http://www.w3.org/2001/XMLSchema'
             RETURN elementID(n) AS subject_id, r.name AS predicate, elementID(m) AS object_id
             """,
         )
@@ -125,5 +121,6 @@ class OntologyStore:
         ]
 
         return GraphDocument(
-            nodes=[node for nodes in nodes_dict for node in nodes.values()], relationships=relationships,
+            nodes=list(nodes_dict.values()),
+            relationships=relationships,
         )
