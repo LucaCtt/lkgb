@@ -1,0 +1,12 @@
+# Generated on 2025-03-20T12:33:12.777192+00:00
+Device,Application,File,Log Event
+russellmitchell_lc,inet-dns,syslog.1.csv,Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+russellmitchell_lc,cloud_share,suricata.log.csv,20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx' for http_stat_msg
+russellmitchell_lc,inet-dns,dnsmasq.log.csv,Jan 20 13:47:21 dnsmasq[3326]: query[AAAA] d1zkz3k4cclnv6.cloudfront.net from 192.168.231.180
+russellmitchell_lc,mail,mail.log.csv,Jan 23 08:06:19 mail dovecot: imap(traci.stevenson): Logged out in=70 out=599
+russellmitchell_lc,vpn,syslog.3.csv,Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...
+russellmitchell_lc,mail,stats.log.csv,"Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)"
+russellmitchell_lc,morris_mail,syslog.csv,Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).
+russellmitchell_lc,inet-dns,syslog.4.csv,Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm
+russellmitchell_lc,webserver,syslog.1.csv,"Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection."
+russellmitchell_lc,cloud_share,redis-server.log.1.csv,5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...

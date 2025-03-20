@@ -1,0 +1,52 @@
+# Generated on 2025-03-20T12:33:12.778219+00:00
+Device,Application,File,Log Event
+russellmitchell_lc,mail,mainlog.3.csv,2022-01-22 13:54:21 1nBGqT-0005kq-CQ Completed
+russellmitchell_lc,internal_share,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Info> - Found an MTU of 1450 for 'ens3'
+russellmitchell_lc,morris_mail,syslog.4.csv,Jan 20 12:20:53 morris-mail exim4[30354]: Stopping MTA: exim4_listener.
+russellmitchell_lc,mail,audit.log.csv,type=LOGIN msg=audit(1642770541.877:2345): pid=12030 uid=0 old-auid=4294967295 auid=0 tty=(none) old-ses=4294967295 ses=102 res=1
+russellmitchell_lc,cloud_share,redis.log.csv,25792:M 22 Jan 17:41:56.137 * Background saving terminated with success
+russellmitchell_lc,davey_mail,user.log.1.csv,Jan 20 11:14:02 davey-mail ec2: 256 SHA256:wZvMsGOInOVqvsOlhNmCH7PNFaKk0EZfNcFDcFLShk8 root@davey-mail (ED25519)
+russellmitchell_lc,cloud_share,suricata.log.csv,20/1/2022 -- 13:16:28 - <Config> - Loading rule file: /etc/suricata/rules/ciarmy.rules
+russellmitchell_lc,davey_mail,syslog.csv,Jan 25 06:57:58 davey-mail systemd[1]: Starting User Manager for UID 1001...
+russellmitchell_lc,morris_mail,mainlog.4.csv,2022-01-20 13:20:54 End queue run: pid=30959
+russellmitchell_lc,webserver,error.log.2.csv,[Sun Jan 23 06:25:13.804652 2022] [core:notice] [pid 29640] AH00094: Command line: '/usr/sbin/apache2'
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,Jan 20 11:22:30    Chain tcpost deleted
+russellmitchell_lc,webserver,suricata.log.csv,"20/1/2022 -- 13:12:35 - <Perf> - OTHER toserver: 0 proto groups, 0 unique SGH's, 0 copies"
+russellmitchell_lc,cloud_share,error.log.3.csv,mkdir failed on directory /var/run/samba/msg.lock: Permission denied
+russellmitchell_lc,vpn,openvpn.log.csv,2022-01-23 13:48:11 twhite/192.168.230.95:40288 Outgoing Data Channel: Using 160 bit message hash 'SHA1' for HMAC authentication
+russellmitchell_lc,mail,mainlog.3.csv,2022-01-23 05:53:06 1nBVoI-00073L-0p => rebecca.blake <rebecca.blake@smith.russellmitchell.com> R=local_user T=maildir_home
+russellmitchell_lc,morris_mail,syslog.2.csv,Jan 23 20:25:24 morris-mail freshclam[29586]: Sun Jan 23 20:25:24 2022 -> ClamAV update process started at Sun Jan 23 20:25:24 2022
+russellmitchell_lc,davey_mail,horde-access.log.csv,"192.168.230.122 - - [24/Jan/2022:03:57:16 +0000] ""GET / HTTP/1.0"" 302 4095 ""-"" ""-"""
+russellmitchell_lc,intranet_server,error.log.2.csv,Length: 139921500 (133M) [text/plain]
+russellmitchell_lc,internal_share,syslog.4.csv,Jan 21 06:21:33 internal-share systemd[1]: message repeated 2 times: [ Reloading.]
+russellmitchell_lc,vpn,syslog.4.csv,Jan 21 06:54:05 vpn os-prober: debug: running /usr/lib/os-probes/mounted/10freedos on mounted /dev/vda15
+russellmitchell_lc,intranet_server,intranet.smith.russellmitchell.com-access.log.2.csv,"172.19.131.174 - - [24/Jan/2022:03:57:34 +0000] ""GET /paypal HTTP/1.1"" 404 363 ""-"" ""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"""
+russellmitchell_lc,vpn,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Config> - Protocol detection and parser disabled for modbus protocol.
+russellmitchell_lc,inet-firewall,kern.log.1.csv,Jan 20 11:12:27 inet-firewall kernel: [    1.060522] uhci_hcd 0000:00:01.2: UHCI Host Controller
+russellmitchell_lc,inet-dns,syslog.csv,Jan 25 07:02:50 inet-dns systemd[16839]: Stopped target Timers.
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,Jan 20 11:22:30 ..End inline action /usr/share/shorewall/action.Broadcast
+russellmitchell_lc,cloud_share,suricata.log.csv,"20/1/2022 -- 13:16:29 - <Error> - [ERRCODE: SC_ERR_UNDEFINED_VAR(101)] - Variable ""SQL_SERVERS"" is not defined in configuration file"
+russellmitchell_lc,morris_mail,auth.log.1.csv,Jan 20 12:17:27 morris-mail sudo: pam_unix(sudo:session): session opened for user root by ait(uid=0)
+russellmitchell_lc,mail,syslog.2.csv,"Jan 23 11:27:31 mail HORDE: [horde] Login success for dorothy.ellis to horde (172.19.130.68) [pid 29777 on line 163 of ""/usr/share/horde/login.php""]"
+russellmitchell_lc,cloud_share,syslog.1.csv,"Jan 24 14:15:03 cloud-share CRON[12638]: (CRON) info (No MTA installed, discarding output)"
+russellmitchell_lc,cloud_share,suricata.log.csv,20/1/2022 -- 13:16:43 - <Config> - using 1 flow manager threads
+russellmitchell_lc,webserver,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Notice> - This is Suricata version 6.0.4 RELEASE running in SYSTEM mode
+russellmitchell_lc,vpn,syslog.1.csv,Jan 24 22:42:32 vpn 50-motd-news[2769]:  * Super-optimized for small spaces - read how we shrank the memory
+russellmitchell_lc,intranet_server,error.log.2.csv,./wphashcrack-0.1/wphashcrack.sh: line 68: cd: HOME not set
+russellmitchell_lc,vpn,syslog.4.csv,Jan 21 06:52:59 vpn kernel: [70791.313280] systemd[1]: Stopped Journal Service.
+russellmitchell_lc,mail,suricata.log.csv,"25/1/2022 -- 06:57:01 - <Notice> - Stats for 'eth0':  pkts: 780375, drop: 0 (0.00%), invalid chksum: 0"
+russellmitchell_lc,vpn,suricata.log.csv,"20/1/2022 -- 13:12:37 - <Config> - stream.reassembly ""toserver-chunk-size"": 2560"
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,"Jan 20 11:22:30     Rule ""PARAM - - tcp 53"" Compiled"
+russellmitchell_lc,webserver,error.log.2.csv,"[Mon Jan 24 06:25:16.644970 2022] [mpm_prefork:notice] [pid 29640] AH00171: Graceful restart requested, doing restart"
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,Jan 20 11:22:30
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,Jan 20 11:22:30    Policy for dmz to lan is REJECT using chain all-all
+russellmitchell_lc,vpn,suricata-start.log.csv,20/1/2022 -- 13:16:23 - <Config> - luajit states preallocated: 128
+russellmitchell_lc,intranet_server,error.log.2.csv,rm: cannot remove 'john.pot': No such file or directory
+russellmitchell_lc,inet-firewall,suricata.log.csv,"20/1/2022 -- 13:12:47 - <Perf> - Builtin MPM ""toclient UDP packet"": 0"
+russellmitchell_lc,cloud_share,redis-server.log.1.csv,5030:M 20 Jan 12:30:58.908 * Ready to accept connections
+russellmitchell_lc,cloud_share,redis-server.log.1.csv,5030:M 20 Jan 12:38:12.421 * Saving the final RDB snapshot before exiting.
+russellmitchell_lc,internal_share,auth.log.1.csv,Jan 21 06:21:01 internal-share sshd[1018]: Received signal 15; terminating.
+russellmitchell_lc,intranet_server,error.log.2.csv,Connecting to github.com (github.com)|140.82.121.3|:443... connected.
+russellmitchell_lc,inet-firewall,shorewall-init.log.1.csv,Jan 20 11:22:30    Table filter Optimized -- Passes =
+russellmitchell_lc,vpn,openvpn.log.csv,2022-01-23 22:43:34 twhite/192.168.230.95:36864 Validating certificate extended key usage
+russellmitchell_lc,intranet_server,suricata.log.csv,20/1/2022 -- 13:16:23 - <Config> - enabling 'eve-log' module 'ssh'
