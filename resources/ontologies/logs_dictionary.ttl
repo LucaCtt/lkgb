@@ -1,13 +1,13 @@
-@base <https://w3id.org/lkgb/log>.
-@prefix : <https://w3id.org/lkgb/log#>.
+@base <http://example.com/lkgb/logs/dictionary>.
+@prefix : <http://example.com/lkgb/logs/dictionary#>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix time: <http://www.w3.org/2006/time#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
-<https://w3id.org/lkgb/log> rdf:type owl:Ontology;
-  owl:versionIRI <https://w3id.org/lkgb/log/1.0.0>;
+<http://example.com/lkgb/logs/dictionary> rdf:type owl:Ontology;
+  owl:versionIRI <http://example.com/lkgb/logs/dictionary/1.0.0>;
   <http://purl.org/dc/elements/1.1/creator> "Luca Cotti";
   <http://purl.org/dc/elements/1.1/description> "An ontology to represent log events.";
   <http://purl.org/dc/elements/1.1/rights> "http://creativecommons.org/licenses/by/4.0/";
@@ -35,55 +35,55 @@
 #################################################################
 #    Object Properties
 #################################################################
-###  https://w3id.org/lkgb/log#hasAddress
+###  http://example.com/lkgb/logs/dictionary#hasAddress
 :hasAddress rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :Address;
   rdfs:comment "Relation between an Event and a Network Address.".
 
-###  https://w3id.org/lkgb/log#hasApplication
+###  http://example.com/lkgb/logs/dictionary#hasApplication
 :hasApplication rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :Application;
   rdfs:comment "Relation between an Event and an Application mentioned in it.".
 
-###  https://w3id.org/lkgb/log#hasFile
+###  http://example.com/lkgb/logs/dictionary#hasFile
 :hasFile rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :File;
   rdfs:comment "Relation between an Event and a File mentioned in it.".
 
-###  https://w3id.org/lkgb/log#hasProcess
+###  http://example.com/lkgb/logs/dictionary#hasProcess
 :hasProcess rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :Process;
   rdfs:comment "Relation between an Event and a Process mentioned in it.".
 
-###  https://w3id.org/lkgb/log#hasSource
+###  http://example.com/lkgb/logs/dictionary#hasSource
 :hasSource rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :Source;
   rdfs:comment "Relation between an Event and the data Source it originates from (e.g. a file, or a log stream).".
 
-###  https://w3id.org/lkgb/log#hasSourceHost
+###  http://example.com/lkgb/logs/dictionary#hasSourceHost
 :hasSourceHost rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :SourceHost;
   rdfs:comment "Relation between an Event and the Device it originates from.".
 
-###  https://w3id.org/lkgb/log#hasSourceType
+###  http://example.com/lkgb/logs/dictionary#hasSourceType
 :hasSourceType rdf:type owl:ObjectProperty;
   rdfs:domain :Source;
   rdfs:range :SourceType;
   rdfs:comment "Relation between a log Source and its SourceType (e.g., apache-access, kernel log).".
 
-###  https://w3id.org/lkgb/log#hasURL
+###  http://example.com/lkgb/logs/dictionary#hasURL
 :hasURL rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :URL;
   rdfs:comment "Relation between an Event and a URL mentioned in it.".
 
-###  https://w3id.org/lkgb/log#hasUser
+###  http://example.com/lkgb/logs/dictionary#hasUser
 :hasUser rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :User;
@@ -97,205 +97,205 @@
 #################################################################
 #    Data properties
 #################################################################
-###  https://w3id.org/lkgb/log#ipv4
+###  http://example.com/lkgb/logs/dictionary#ipv4
 :ipv4 rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "IPv4 address".
 
-###  https://w3id.org/lkgb/log#ipv6
+###  http://example.com/lkgb/logs/dictionary#ipv6
 :ipv6 rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "IPv6 address".
 
-###  https://w3id.org/lkgb/log#hostname
+###  http://example.com/lkgb/logs/dictionary#hostname
 :hostname rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Hostname associated with the address".
 
-###  https://w3id.org/lkgb/log#mac
+###  http://example.com/lkgb/logs/dictionary#mac
 :mac rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "MAC address associated with the address".
 
-###  https://w3id.org/lkgb/log#port
+###  http://example.com/lkgb/logs/dictionary#port
 :port rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:integer;
   rdfs:comment "Port".
 
-###  https://w3id.org/lkgb/log#city
+###  http://example.com/lkgb/logs/dictionary#city
 :city rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "City in which the address is located".
 
-###  https://w3id.org/lkgb/log#region
+###  http://example.com/lkgb/logs/dictionary#region
 :region rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Region in which the address is located".
 
-###  https://w3id.org/lkgb/log#country
+###  http://example.com/lkgb/logs/dictionary#country
 :country rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Country in which the address is located".
 
-###  https://w3id.org/lkgb/log#timezone
+###  http://example.com/lkgb/logs/dictionary#timezone
 :timezone rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Timezone in which the address is located".
 
-###  https://w3id.org/lkgb/log#address.asn
+###  http://example.com/lkgb/logs/dictionary#address.asn
 :asn rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Autonomous System Number associated with the address".
 
-###  https://w3id.org/lkgb/log#address.org
+###  http://example.com/lkgb/logs/dictionary#address.org
 :org rdf:type owl:DatatypeProperty;
   rdfs:domain :Address;
   rdfs:range xsd:string;
   rdfs:comment "Organization associated with the address".
 
-###  https://w3id.org/lkgb/log#appname
+###  http://example.com/lkgb/logs/dictionary#appname
 :appname rdf:type owl:DatatypeProperty;
   rdfs:domain :Application;
   rdfs:range xsd:string;
   rdfs:comment "Application name".
 
-###  https://w3id.org/lkgb/log#vendor
+###  http://example.com/lkgb/logs/dictionary#vendor
 :vendor rdf:type owl:DatatypeProperty;
   rdfs:domain :Application;
   rdfs:range xsd:string;
   rdfs:comment "Application vendor".
 
-###  https://w3id.org/lkgb/log#version
+###  http://example.com/lkgb/logs/dictionary#version
 :version rdf:type owl:DatatypeProperty;
   rdfs:domain :Application;
   rdfs:range xsd:string;
   rdfs:comment "Application version".
 
-###  https://w3id.org/lkgb/log#hashmd5
+###  http://example.com/lkgb/logs/dictionary#hashmd5
 :hashmd5 rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:string;
   rdfs:comment "File MD5 Hashsum".
 
-###  https://w3id.org/lkgb/log#line
+###  http://example.com/lkgb/logs/dictionary#line
 :line rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:integer;
   rdfs:comment "File line number".
 
-###  https://w3id.org/lkgb/log#mode
+###  http://example.com/lkgb/logs/dictionary#mode
 :mode rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:string;
   rdfs:comment "File mode flags".
 
-###  https://w3id.org/lkgb/log#filename
+###  http://example.com/lkgb/logs/dictionary#filename
 :filename rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:string;
   rdfs:comment "File name".
 
-###  https://w3id.org/lkgb/log#path
+###  http://example.com/lkgb/logs/dictionary#path
 :path rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:string;
   rdfs:comment "File system path".
 
-###  https://w3id.org/lkgb/log#permissions
+###  http://example.com/lkgb/logs/dictionary#permissions
 :permissions rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:string;
   rdfs:comment "File permissions".
 
-###  https://w3id.org/lkgb/log#size
+###  http://example.com/lkgb/logs/dictionary#size
 :size rdf:type owl:DatatypeProperty;
   rdfs:domain :File;
   rdfs:range xsd:integer;
   rdfs:comment "File size in octets".
 
-###  https://w3id.org/lkgb/log#command
+###  http://example.com/lkgb/logs/dictionary#command
 :command rdf:type owl:DatatypeProperty;
   rdfs:domain :Event;
   rdfs:range xsd:string;
   rdfs:comment "Command".
 
-###  https://w3id.org/lkgb/log#message
+###  http://example.com/lkgb/logs/dictionary#message
 :message rdf:type owl:DatatypeProperty;
   rdfs:domain :Event;
   rdfs:range xsd:string;
   rdfs:comment "Event message".
 
-###  https://w3id.org/lkgb/log#priority
+###  http://example.com/lkgb/logs/dictionary#priority
 :priority rdf:type owl:DatatypeProperty;
   rdfs:domain :Event;
   rdfs:range xsd:string;
   rdfs:comment "Event priority (e.g. ERROR, WARN, DEBUG, CRIT)".
 
-###  https://w3id.org/lkgb/log#pid
+###  http://example.com/lkgb/logs/dictionary#pid
 :pid rdf:type owl:DatatypeProperty;
   rdfs:domain :Process;
   rdfs:range xsd:integer;
   rdfs:comment "Process ID (pid)".
 
-###  https://w3id.org/lkgb/log#processname
+###  http://example.com/lkgb/logs/dictionary#processname
 :processname rdf:type owl:DatatypeProperty;
   rdfs:domain :Process;
   rdfs:range xsd:string;
   rdfs:comment "Process name".
 
-###  https://w3id.org/lkgb/log#tid
+###  http://example.com/lkgb/logs/dictionary#tid
 :tid rdf:type owl:DatatypeProperty;
   rdfs:domain :Process;
   rdfs:range xsd:integer;
   rdfs:comment "Thread identifier of the process".
 
-###  https://w3id.org/lkgb/log#param
+###  http://example.com/lkgb/logs/dictionary#param
 :param rdf:type owl:DatatypeProperty;
   rdfs:domain :URL;
   rdfs:range xsd:string;
   rdfs:comment "URL parameter".
 
-###  https://w3id.org/lkgb/log#url
+###  http://example.com/lkgb/logs/dictionary#url
 :url rdf:type owl:DatatypeProperty;
   rdfs:domain :URL;
   rdfs:range xsd:string;
   rdfs:comment "Complete URL".
 
-###  https://w3id.org/lkgb/log#domain
+###  http://example.com/lkgb/logs/dictionary#domain
 :domain rdf:type owl:DatatypeProperty;
   rdfs:domain :User;
   rdfs:range xsd:string;
   rdfs:comment "User account NT domain".
 
-###  https://w3id.org/lkgb/log#gid
+###  http://example.com/lkgb/logs/dictionary#gid
 :gid rdf:type owl:DatatypeProperty;
   rdfs:domain :User;
   rdfs:range xsd:integer;
   rdfs:comment "User account group ID (gid)".
 
-###  https://w3id.org/lkgb/log#groupname
+###  http://example.com/lkgb/logs/dictionary#groupname
 :groupname rdf:type owl:DatatypeProperty;
   rdfs:domain :User;
   rdfs:range xsd:string;
   rdfs:comment "User account group name".
 
-###  https://w3id.org/lkgb/log#uid
+###  http://example.com/lkgb/logs/dictionary#uid
 :uid rdf:type owl:DatatypeProperty;
   rdfs:domain :User;
   rdfs:range xsd:integer;
   rdfs:comment "User account ID (uid)".
 
-###  https://w3id.org/lkgb/log#username
+###  http://example.com/lkgb/logs/dictionary#username
 :username rdf:type owl:DatatypeProperty;
   rdfs:domain :User;
   rdfs:range xsd:string;
@@ -304,59 +304,59 @@
 #################################################################
 #    Classes
 #################################################################
-###  https://w3id.org/lkgb/log#Event
+###  http://example.com/lkgb/logs/dictionary#Event
 :Event rdf:type owl:Class;
   rdfs:comment "A single log event, such a log line in a log file.";
   rdfs:label "Event".
 
-###  https://w3id.org/lkgb/log#Source
+###  http://example.com/lkgb/logs/dictionary#Source
 :Source rdf:type owl:Class;
   rdfs:comment "A log source, such as an aggregation of logs from different applications (e.g., SysLog) or aggregation of several log files from different devices.";
   rdfs:label "Source".
 
-###  https://w3id.org/lkgb/log#SourceHost
+###  http://example.com/lkgb/logs/dictionary#SourceHost
 :SourceHost rdf:type owl:Class;
   rdfs:label "Source Host";
   rdfs:comment "The host/device which produced the source for this log event".
 
 # TODO: Check if this should be a class or a property
-###  https://w3id.org/lkgb/log#SourceType
+###  http://example.com/lkgb/logs/dictionary#SourceType
 :SourceType rdf:type owl:Class;
   rdfs:comment "The type of a log source, e.g., apache-access, kernel, syslog, audit, etc.";
   rdfs:label "Source Type".
 
-###  https://w3id.org/lkgb/log#TimeStamp
+###  http://example.com/lkgb/logs/dictionary#TimeStamp
 :TimeStamp rdf:type owl:Class;
   rdfs:subClassOf time:Instant;
   rdfs:comment "A timestamp associated with an event.";
   rdfs:label "Timestamp".
 
-###  https://w3id.org/lkgb/log#Address
+###  http://example.com/lkgb/logs/dictionary#Address
 :Address rdf:type owl:Class;
   rdfs:comment "A logical address in a network, such as an IP address or a MAC address.";
   rdfs:label "Network Address".
 
-###  https://w3id.org/lkgb/log#Application
+###  http://example.com/lkgb/logs/dictionary#Application
 :Application rdf:type owl:Class;
   rdfs:comment "An application, such as a web server, a database, etc.";
   rdfs:label "Application".
 
-###  https://w3id.org/lkgb/log#File
+###  http://example.com/lkgb/logs/dictionary#File
 :File rdf:type owl:Class;
   rdfs:comment "A file, such as a configuration file, a data file, etc.";
   rdfs:label "File".
 
-###  https://w3id.org/lkgb/log#Process
+###  http://example.com/lkgb/logs/dictionary#Process
 :Process rdf:type owl:Class;
   rdfs:comment "An operating system process, such as a daemon, a service, etc.";
   rdfs:label "Process".
 
-###  https://w3id.org/lkgb/log#URL
+###  http://example.com/lkgb/logs/dictionary#URL
 :URL rdf:type owl:Class;
   rdfs:comment "A URL, e.g. leading to a web page, a file, etc.";
   rdfs:label "URL".
 
-###  https://w3id.org/lkgb/log#User
+###  http://example.com/lkgb/logs/dictionary#User
 :User rdf:type owl:Class;
   rdfs:comment "A user account, such as a local user, a domain user, etc.";
   rdfs:label "User Account".

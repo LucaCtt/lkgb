@@ -1,5 +1,5 @@
-@prefix : <http://example.com/instances#> .
-@prefix log: <https://raw.githubusercontent.com/LucaCtt/lkgb/refs/heads/main/ontologies/logs.ttl#> .
+@prefix : <http://example.com/lkgb/logs/examples#> .
+@prefix log: <http://example.com/lkgb/logs/dictionary#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix time: <http://www.w3.org/2006/time#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -33,9 +33,9 @@
     ];
   ].
 
-# 20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx' for http_stat_msg
+# 20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx\' for http_stat_msg
 :event2 rdf:type log:Event;
-  log:message "using shared mpm ctx' for http_stat_msg";
+  log:message "20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx\' for http_stat_msg";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
     time:inXSDDate "2022-01-20"^^xsd:date;
@@ -109,7 +109,7 @@
   ].
 
 # Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...
-:event4 rdf:type log:Event;
+:event5 rdf:type log:Event;
   log:message "systemd[1]: Starting Daily apt download activities...";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
@@ -133,7 +133,7 @@
   ].
 
 # "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)"
-:event4 rdf:type log:Event;
+:event6 rdf:type log:Event;
   log:message "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
@@ -152,7 +152,7 @@
   ].
 
 # Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).
-:event5 rdf:type log:Event;
+:event7 rdf:type log:Event;
   log:message "systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
@@ -176,7 +176,7 @@
   ].
 
 # Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm
-:event6 rdf:type log:Event;
+:event8 rdf:type log:Event;
   log:message "kernel: [    3.552456] raid6: using avx2x2 recovery algorithm";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
@@ -199,7 +199,7 @@
   ].
 
 # "Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection."
-:event7 rdf:type log:Event;
+:event9 rdf:type log:Event;
   log:message "systemd-timesyncd[30824]: Network configuration changed, trying to establish connection.";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
@@ -223,7 +223,7 @@
   ].
 
 # 5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...
-:event8 rdf:type log:Event;
+:event10 rdf:type log:Event;
   log:message "signal-handler (1642682292) Received SIGTERM scheduling shutdown...";
   log:hasTimeStamp [
     rdf:type log:TimeStamp;
