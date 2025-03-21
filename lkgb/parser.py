@@ -48,7 +48,25 @@ gen_graph_prompt = ChatPromptTemplate.from_messages(
 )
 
 
-def _get_example_group(event: str, nodes: list[dict], relationships: dict) -> list[BaseMessage]:
+def _get_example_group(event: str, graph: GraphDocument) -> list[BaseMessage]:
+    nodes = [
+        {
+            "id": node.id,
+            "type": node.type,
+            "properties": [{"type": key, "value": value} for key, value in node.properties.items()],
+        }
+        for node in graph.nodes
+    ]
+
+    relationships = [
+        {
+            "source_id": rel.source.id,
+            "target_id": rel.target.id,
+            "type": rel.type,
+        }
+        for rel in graph.relationships
+    ]
+
     return [
         HumanMessage(f"Event: '{event}", name="example_user"),
         AIMessage(
@@ -109,8 +127,8 @@ class Parser:
             valid_properties = valid_properties + list(node.properties.keys())
 
         class _Property(BaseModel):
-            key: str = Field(
-                description=f"Property key. Available types with their allow type are: {valid_properties}",
+            type: str = Field(
+                description=f"The type or label of the propertye. Available options are: {valid_properties}",
                 enum=valid_properties,
             )
             value: str = Field(description=("Extracted value."))
@@ -140,7 +158,8 @@ class Parser:
         return DynamicEventGraph
 
     def _get_examples(self, event: str) -> list[BaseMessage]:
-        examples = self.store.search_similar_events(event, k=1)
+        similar_event_graph = self.store.search_similar_events(event, k=1)
+        return _get_example_group(event, similar_event_graph[0])
 
     def parse(self, event: str) -> ParserReport:
         """Parse the given event and construct a knowledge graph.
@@ -165,7 +184,7 @@ class Parser:
             node.id: Node(
                 id=str(uuid.uuid4()),
                 type=node.type,
-                properties={prop.key: prop.value for prop in node.properties} if node.properties else {},
+                properties={prop.type: prop.value for prop in node.properties} if node.properties else {},
             )
             for node in raw_schema["parsed"].nodes
         }

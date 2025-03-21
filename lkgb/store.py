@@ -1,7 +1,7 @@
 """Store for the events knowledge graph."""
-
 from pathlib import Path
 
+import neo4j.time
 from langchain_core.embeddings import Embeddings
 from langchain_neo4j import Neo4jGraph, Neo4jVector
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
@@ -96,6 +96,7 @@ class EventsStore:
         """Clear the store to its initial state."""
         self.graph_store.query("MATCH (n) DETACH DELETE n")
         self.graph_store.query("DROP INDEX $index_name", params={"index_name": EVENTS_INDEX_NAME})
+        self.graph_store.query("DROP CONSTRAINT $constraint_name", params={"constraint_name": "n10s_unique_uri"})
 
     def ontology_graph(self) -> GraphDocument:
         """Return the ontology graph as a GraphDocument.
@@ -110,8 +111,8 @@ class EventsStore:
             MATCH (c:Class)
             WHERE c.uri STARTS WITH $log_ontology_url OR c.uri = $time_instant_url
             OPTIONAL MATCH (c)<-[:DOMAIN]-(p:Property)
-            WITH c.name AS class, elementID(c) as id, COLLECT([p.name, p.comment]) AS pairs
-            RETURN class, id, apoc.map.fromPairs(pairs) AS properties
+            WITH c.name AS class, c.uri as uri, COLLECT([p.name, p.comment]) AS pairs
+            RETURN class, uri, apoc.map.fromPairs(pairs) AS properties
             """,
             params={
                 "log_ontology_url": LOG_ONTOLOGY_URL,
@@ -119,7 +120,7 @@ class EventsStore:
             },
         )
         nodes_dict = {
-            row["id"]: Node(id=row["id"], type=row["class"], properties=row["properties"]) for row in nodes_with_props
+            row["uri"]: Node(id=row["uri"], type=row["class"], properties=row["properties"]) for row in nodes_with_props
         }
 
         triples = self.graph_store.query(
@@ -128,14 +129,14 @@ class EventsStore:
             WHERE n.uri STARTS WITH $log_ontology_url
             AND m.uri STARTS WITH $log_ontology_url
             AND r.uri STARTS WITH $log_ontology_url
-            RETURN elementID(n) AS subject_id, r.name AS predicate, elementID(m) AS object_id
+            RETURN n.uri AS subject_uri, r.name AS predicate, m.uri AS object_uri
             """,
             params={"log_ontology_url": LOG_ONTOLOGY_URL},
         )
         relationships = [
             Relationship(
-                source=nodes_dict[row["subject_id"]],
-                target=nodes_dict[row["object_id"]],
+                source=nodes_dict[row["subject_uri"]],
+                target=nodes_dict[row["object_uri"]],
                 type=row["predicate"],
             )
             for row in triples
@@ -170,10 +171,10 @@ class EventsStore:
             self.graph_store.query(
                 f"""
                 MATCH (a:{relationship.source.type}),(b:{relationship.target.type})
-                WHERE elementID(a) = $source_id AND elementID(b) = $target_id
+                WHERE a.uri = $source_uri AND b.uri = $target_uri
                 CREATE (a)-[r:{relationship.type}]->(b)
                 """,
-                params={"source_id": relationship.source.id, "target_id": relationship.target.id},
+                params={"source_uri": relationship.source.uri, "target_uri": relationship.target.uri},
             )
 
     def search_similar_events(self, event: str, k: int = 5) -> list[GraphDocument]:
@@ -194,18 +195,60 @@ class EventsStore:
             """
             CALL db.index.vector.queryNodes($events_index_name, $k, $query_embeddings)
             YIELD node, score
-            RETURN elementID(node) as node_id, LABELS(node), score
+            RETURN node.uri as node_uri, LABELS(node), score
             """,
             params={"events_index_name": EVENTS_INDEX_NAME, "k": k, "query_embeddings": query_embeddings},
         )
 
-        for similar_event in similar_events:
-            nodes_subgraph = self.graph_store.query(
-                """
-                MATCH (n)
-                WHERE elementID(n) = $node_id
-                CALL apoc.path.subgraphAll(n)
-                YIELD nodes, relationships
-                RETURN nodes, relationships
-                """,
+        return [self.__get_subgraph_from_node(similar_event["node_uri"]) for similar_event in similar_events]
+
+    def __get_subgraph_from_node(self, node_uri: str) -> GraphDocument:
+        nodes_subgraph = self.graph_store.query(
+            """
+            MATCH (n)
+            WHERE n.uri = $node_uri
+            CALL apoc.path.subgraphAll(n, {})
+            YIELD nodes, relationships
+            UNWIND nodes AS node
+            UNWIND relationships AS relationship
+            WITH COLLECT(DISTINCT {
+            uri: node.uri,
+            type: [label IN LABELS(node) WHERE label <> 'Resource'],
+            properties: apoc.map.removeKey(PROPERTIES(node), 'embedding')
+            }) AS nodes,
+            COLLECT(DISTINCT {
+            source: STARTNODE(relationship).uri,
+            target: ENDNODE(relationship).uri,
+            type: TYPE(relationship)
+            }) AS relationships
+            RETURN nodes, relationships
+            """,
+            params={"node_uri": node_uri},
+        )
+        for node in nodes_subgraph[0]["nodes"]:
+            for key, value in node["properties"].items():
+                if isinstance(value, neo4j.time.DateTime):
+                    node["properties"][key] = value.iso_format()
+                if isinstance(value, neo4j.time.Date):
+                    node["properties"][key] = value.iso_format()
+
+
+        nodes_dict = {
+            node["uri"]: Node(id=node["uri"], type=node["type"][0], properties=node["properties"])
+            for node in nodes_subgraph[0]["nodes"]
+        }
+
+
+        relationships = [
+            Relationship(
+                source=nodes_dict[relationship["source"]],
+                target=nodes_dict[relationship["target"]],
+                type=relationship["type"],
             )
+            for relationship in nodes_subgraph[0]["relationships"]
+        ]
+
+        return GraphDocument(
+            nodes=list(nodes_dict.values()),
+            relationships=relationships,
+        )

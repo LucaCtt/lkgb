@@ -44,13 +44,8 @@ store = EventsStore(
     experiment_id=Config.experiment_id,
 )
 
-# TODO: This is just temporary
 store.clear()
 store.initialize(Config.ontology_path, Config.examples_path)
-store.search_similar_events(
-    "Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)"
-)
-exit()
 
 # Create the parser model
 parser_model = backend.get_parser_model(
