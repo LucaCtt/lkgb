@@ -1,3 +1,9 @@
+"""Main entry point for the log knowledge graph builder.
+
+Handles the instantiation of the parser and the backend,
+the reading of the logs, and the construction of the knowledge graph.
+"""
+
 import logging
 
 import pandas as pd
@@ -38,10 +44,12 @@ store = EventsStore(
     experiment_id=Config.experiment_id,
 )
 
-# Clear and initialize the store for consistency among runs
+# TODO: This is just temporary
 store.clear()
 store.initialize(Config.ontology_path, Config.examples_path)
-store.search_similar_events("Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)")
+store.search_similar_events(
+    "Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)"
+)
 exit()
 
 # Create the parser model

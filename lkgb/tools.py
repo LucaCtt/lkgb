@@ -1,3 +1,5 @@
+"""Langchain tools for the knowledge graph builder."""
+
 from http import HTTPStatus
 from typing import ClassVar
 

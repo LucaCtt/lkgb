@@ -53,6 +53,7 @@ select = [
     "ALL", # include all the rules, including new ones
 ]
 ignore = [
+    "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
     "D107",
     "D203",
