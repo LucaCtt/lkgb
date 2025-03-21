@@ -176,50 +176,36 @@ class EventsStore:
                 params={"source_id": relationship.source.id, "target_id": relationship.target.id},
             )
 
-    def search_similar_events(self, event: str, k: int = 3) -> GraphDocument:
+    def search_similar_events(self, event: str, k: int = 5) -> list[GraphDocument]:
         """Search for similar events in the store.
 
         Args:
             event (str): The event message to search for.
-            k (int): The number of similar events to return.
+            k (int): The number of similar events to search for.
 
         Returns:
-            GraphDocument: The graph of similar events and their relationships.
+            list[GraphDocument]: The list of graphs of similar events,
+                with the nodes they are connected to and their relationships.
 
         """
         query_embeddings = self.embeddings.embed_query(event)
 
-        result = self.graph_store.query(
+        similar_events = self.graph_store.query(
             """
             CALL db.index.vector.queryNodes($events_index_name, $k, $query_embeddings)
-            YIELD node as similarEvent, score
-            OPTIONAL MATCH (similarEvent)-[r]-(connected)
-            WITH collect(DISTINCT similarEvent) + collect(DISTINCT connected) AS allNodes,
-                collect(DISTINCT r) AS allRels
-            RETURN allNodes, allRels
+            YIELD node, score
+            RETURN elementID(node) as node_id, LABELS(node), score
             """,
             params={"events_index_name": EVENTS_INDEX_NAME, "k": k, "query_embeddings": query_embeddings},
         )
 
-        nodes_dict = {
-            node.id: Node(
-                id=node.id,
-                type=node.labels[0],
-                properties=dict(node),
+        for similar_event in similar_events:
+            nodes_subgraph = self.graph_store.query(
+                """
+                MATCH (n)
+                WHERE elementID(n) = $node_id
+                CALL apoc.path.subgraphAll(n)
+                YIELD nodes, relationships
+                RETURN nodes, relationships
+                """,
             )
-            for node in result[0]["allNodes"]
-        }
-
-        relationships = [
-            Relationship(
-                source=nodes_dict[rel.startNodeElementId],
-                target=nodes_dict[rel.endNodeElementId],
-                type=rel.type,
-            )
-            for rel in result[0]["allRels"]
-        ]
-
-        return GraphDocument(
-            nodes=list(nodes_dict.values()),
-            relationships=relationships,
-        )

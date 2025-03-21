@@ -1,12 +1,12 @@
 """Parser module for parsing log events and constructing knowledge graphs."""
 
+import uuid
 from typing import cast
 
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
 from pydantic import BaseModel, Field
 
@@ -96,13 +96,7 @@ class Parser:
         # Also include raw output to retrieve eventual errors.
         structured_model = structured_model.with_structured_output(self.__create_graph_structure(), include_raw=True)
 
-        # TODO: this does not work with structured output
-        self.chain = RunnableWithMessageHistory(
-            gen_graph_prompt | structured_model,
-            lambda _: self.history,
-            input_messages_key="event",
-            history_messages_key="messages",
-        )
+        self.chain = gen_graph_prompt | structured_model
 
     def __create_graph_structure(self) -> type[_EventGraph]:
         ontology = self.store.ontology_graph()
@@ -145,47 +139,8 @@ class Parser:
 
         return DynamicEventGraph
 
-    def _get_examples(self) -> list[BaseMessage]:
-        # TODO: Move this example to the graph store(?)
-        return _get_example_group(
-            "2022-01-21 00:09:11 jhall/192.168.230.165:46011 TLS: soft reset sec=3308/3308 bytes=45748/-1 pkts=649/0",
-            nodes=[
-                {
-                    "id": "1",
-                    "type": "Event",
-                    "properties": [
-                        {"key": "message", "value": "TLS: soft reset sec=3308/3308 bytes=45748/-1 pkts=649/0"},
-                    ],
-                },
-                {"id": "2", "type": "User", "properties": [{"key": "username", "value": "jhall"}]},
-                {
-                    "id": "3",
-                    "type": "Address",
-                    "properties": [
-                        {"key": "ipv4", "value": "192.168.230.165"},
-                        {"key": "port", "value": "46011"},
-                        {"key": "city", "value": "Los Angeles"},
-                        {"key": "region", "value": "California"},
-                        {"key": "country", "value": "United States"},
-                        {"key": "timezone", "value": "+08:00"},
-                        {"key": "asn", "value": "AS1234"},
-                        {"key": "organization", "value": "Example Inc."},
-                    ],
-                },
-                {
-                    "id": "4",
-                    "type": "TimeStamp",
-                    "properties": [
-                        {"key": "inXSDDateTime", "value": "2022-01-21 00:09:11"},
-                    ],
-                },
-            ],
-            relationships=[
-                {"source_id": "1", "target_id": "2", "type": "hasUser"},
-                {"source_id": "1", "target_id": "3", "type": "hasAddress"},
-                {"source_id": "1", "target_id": "4", "type": "hasTimeStamp"},
-            ],
-        )
+    def _get_examples(self, event: str) -> list[BaseMessage]:
+        examples = self.store.search_similar_events(event, k=1)
 
     def parse(self, event: str) -> ParserReport:
         """Parse the given event and construct a knowledge graph.
@@ -200,16 +155,15 @@ class Parser:
         report = ParserReport()
 
         raw_schema = self.chain.invoke(
-            {"event": event, "examples": self._get_examples()},
+            {"event": event, "examples": self._get_examples(event)},
             {"configurable": {"session_id": "unused"}},
         )
 
         raw_schema = cast(dict, raw_schema)
 
-        # TODO: fix ids
         nodes_dict = {
             node.id: Node(
-                id=node.id,
+                id=str(uuid.uuid4()),
                 type=node.type,
                 properties={prop.key: prop.value for prop in node.properties} if node.properties else {},
             )
