@@ -53,15 +53,11 @@ select = [
     "ALL", # include all the rules, including new ones
 ]
 ignore = [
-    "D100",   # ignore missing docs
-    "D101",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D106",
+    "D103", # Missing docstring in public function
     "D107",
     "D203",
     "D213",
-    "E402",   # false positives for local imports
+    "E402",
+    "TD002", # Missing author in todo
+    "TD003", # Missing issue link in todo 
 ]

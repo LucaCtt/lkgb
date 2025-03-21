@@ -3,11 +3,11 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 
-from lkgb import config
 from lkgb.backend import HuggingFaceBackend, OllamaBackend
+from lkgb.config import Config
 from lkgb.parser import Parser
 from lkgb.reports import RunSummary
-from lkgb.store import OntologyStore
+from lkgb.store import EventsStore
 
 # Set up logging format
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # Set the backend
-if config.USE_OLLAMA_BACKEND:
+if Config.use_ollama_backend:
     logger.info("Using Ollama backend")
     backend = OllamaBackend()
 else:
@@ -27,32 +27,40 @@ else:
     backend = HuggingFaceBackend()
 
 # Load the embeddings model
-embeddings = backend.get_embeddings(model=config.EMBEDDINGS_MODEL)
+embeddings = backend.get_embeddings(model=Config.embeddings_model)
 
 # Create the vector store
-ontology = OntologyStore(
-    url=config.NEO4J_URL,
-    username=config.NEO4J_USERNAME,
-    password=config.NEO4J_PASSWORD,
+store = EventsStore(
+    url=Config.neo4j_url,
+    username=Config.neo4j_username,
+    password=Config.neo4j_password,
+    embeddings=embeddings,
+    experiment_id=Config.experiment_id,
 )
+
+# Clear and initialize the store for consistency among runs
+store.clear()
+store.initialize(Config.ontology_path, Config.examples_path)
+store.search_similar_events("Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)")
+exit()
 
 # Create the parser model
 parser_model = backend.get_parser_model(
-    model=config.PARSER_MODEL,
-    temperature=config.PARSER_TEMPERATURE,
+    model=Config.parser_model,
+    temperature=Config.parser_temperature,
 )
 
 parser = Parser(
     parser_model,
-    ontology,
-    config.SELF_REFLECTION_STEPS,
+    store,
+    Config.self_reflection_steps,
 )
 
 
 def main() -> None:
-    logger.info("Reading logs from %s", config.TEST_LOG_PATH)
+    logger.info("Reading logs from %s", Config.test_log_path)
 
-    events_df = pd.read_csv(config.TEST_LOG_PATH, comment="#")
+    events_df = pd.read_csv(Config.test_log_path, comment="#")
     # To prevent weird stuff with NaNs
     events_df = events_df.fillna("")
 

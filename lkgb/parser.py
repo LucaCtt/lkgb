@@ -1,7 +1,8 @@
+"""Parser module for parsing log events and constructing knowledge graphs."""
+
 from typing import cast
 
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.documents import Document
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,7 +11,7 @@ from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relations
 from pydantic import BaseModel, Field
 
 from lkgb.reports import ParserReport
-from lkgb.store import OntologyStore
+from lkgb.store import EventsStore
 from lkgb.tools import fetch_ip_address_info
 
 
@@ -41,7 +42,7 @@ gen_graph_prompt = ChatPromptTemplate.from_messages(
             system_prompt,
         ),
         ("placeholder", "{examples}"),
-        ("human", "Event: '{log}'"),
+        ("human", "Event: '{event}'"),
         ("placeholder", "{messages}"),
     ],
 )
@@ -74,11 +75,11 @@ class Parser:
     def __init__(
         self,
         parser_model: BaseLanguageModel,
-        ontology: OntologyStore,
+        store: EventsStore,
         self_reflection_steps: int,
     ) -> "Parser":
         self.history = ChatMessageHistory()
-        self.ontology = ontology
+        self.store = store
         self.self_reflection_steps = self_reflection_steps
 
         try:
@@ -99,18 +100,18 @@ class Parser:
         self.chain = RunnableWithMessageHistory(
             gen_graph_prompt | structured_model,
             lambda _: self.history,
-            input_messages_key="log",
+            input_messages_key="event",
             history_messages_key="messages",
         )
 
     def __create_graph_structure(self) -> type[_EventGraph]:
-        onto = self.ontology.graph()
+        ontology = self.store.ontology_graph()
 
-        valid_node_types = [node.type for node in onto.nodes]
-        valid_relationships = [rel.type for rel in onto.relationships]
+        valid_node_types = [node.type for node in ontology.nodes]
+        valid_relationships = [rel.type for rel in ontology.relationships]
 
         valid_properties = []
-        for node in onto.nodes:
+        for node in ontology.nodes:
             valid_properties = valid_properties + list(node.properties.keys())
 
         class _Property(BaseModel):
@@ -186,29 +187,26 @@ class Parser:
             ],
         )
 
-    def parse(self, log: str) -> ParserReport:
-        """Given a log, this function identifies and updates the template for the log and also for similar logs.
-
-        It first searches for very similar logs in the store and checks if their templates match the current log.
-        If no matching template is found, it searches for sufficiently similar logs
-        and uses them to generate a template.
+    def parse(self, event: str) -> ParserReport:
+        """Parse the given event and construct a knowledge graph.
 
         Args:
-            log (str): The log for weich the template needs to be identified.
+            event: The log event to parse.
 
         Returns:
-            ParserReport: A ParserReport object containing the timings of the parsing operations.
+            A report containing the stats of the parsing process.
 
         """
         report = ParserReport()
 
         raw_schema = self.chain.invoke(
-            {"log": log, "examples": self._get_examples()},
+            {"event": event, "examples": self._get_examples()},
             {"configurable": {"session_id": "unused"}},
         )
 
         raw_schema = cast(dict, raw_schema)
 
+        # TODO: fix ids
         nodes_dict = {
             node.id: Node(
                 id=node.id,
@@ -225,5 +223,6 @@ class Parser:
             relationships.append(Relationship(source=source_node, target=target_node, type=rel.type))
 
         graph = GraphDocument(nodes=list(nodes_dict.values()), relationships=relationships)
+        self.store.add_event_graph(graph)
 
-        return report.finish(graph)
+        return report.finish()
