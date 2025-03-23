@@ -4,233 +4,317 @@
 @prefix time: <http://www.w3.org/2006/time#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
-# Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
-:event1 rdf:type log:Event;
-  log:message "Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)";
-  log:command "cd / && run-parts --report /etc/cron.hourly";
-  log:hasUser [
-    rdf:type log:User;
-    log:username "root";
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "CRON";
-    log:pid 16314;
-  ];
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-25"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-25T06:17:01"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 25;
-      time:hour 6;
-      time:minute 17;
-      time:second 1;
-    ];
-  ].
+# inet-dns, syslog.1.csv, Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+:datetime-1 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 25;
+  time:hour 6;
+  time:minute 17;
+  time:second 1.
 
-# 20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx\' for http_stat_msg
-:event2 rdf:type log:Event;
-  log:message "20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx\' for http_stat_msg";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-20"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-20T13:16:23"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 20;
-      time:hour 13;
-      time:minute 16;
-      time:second 23;
-    ];
-  ].
+:timestamp-1 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-25"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-25T06:17:01"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-1.
 
-# Jan 20 13:47:21 dnsmasq[3326]: query[AAAA] d1zkz3k4cclnv6.cloudfront.net from 192.168.231.180
-:event3 rdf:type log:Event;
-  log:message "Jan 20 13:47:21 dnsmasq[3326]: query[AAAA] d1zkz3k4cclnv6.cloudfront.net from 192.168.231.180";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-20"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-20T13:47:21"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 20;
-      time:hour 13;
-      time:minute 47;
-      time:second 21;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "dnsmasq";
-    log:pid 3326;
-  ];
-  log:hasAddress [
-    rdf:type log:Address;
-    log:hostname "d1zkz3k4cclnv6.cloudfront.net";
-    log:ipv4 "192.168.231.180";
-  ].
+:source-1 rdf:type log:Source;
+  log:sourceName "syslog.1.csv";
+  log:sourceType "csv";
+  log:sourceDevice "inet-dns".
 
-# Jan 23 08:06:19 mail dovecot: imap(traci.stevenson): Logged out in=70 out=599
-:event4 rdf:type log:Event;
-  log:message "Jan 23 08:06:19 mail dovecot: imap(traci.stevenson): Logged out in=70 out=599";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-23"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-23T08:06:19"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 23;
-      time:hour 8;
-      time:minute 6;
-      time:second 19;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "dovecot";
-  ];
-  log:hasUser [
-    rdf:type log:User;
-    log:username "traci.stevenson";
-  ].
+:user-1 rdf:type log:User;
+  log:userName "root".
 
-# Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...
-:event5 rdf:type log:Event;
-  log:message "Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-22"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-22T19:12:09"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 22;
-      time:hour 19;
-      time:minute 12;
-      time:second 9;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "systemd";
-    log:pid 1;
-  ].
+:process-1 rdf:type log:Process;
+  log:pid 16314.
 
-# "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)"
-:event6 rdf:type log:Event;
-  log:message "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-23"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-23T06:42:05"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 23;
-      time:hour 6;
-      time:minute 42;
-      time:second 5;
-    ];
-  ].
+:application-1 rdf:type log:Application;
+  log:applicationName "CRON";
+  log:hasProcess :process-1.
 
-# Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).
-:event7 rdf:type log:Event;
-  log:message "Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-25"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-25T06:57:57"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 25;
-      time:hour 6;
-      time:minute 57;
-      time:second 57;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "systemd";
-    log:pid 1993;
-  ].
+:event-1 rdf:type log:Event;
+  log:eventMessage "Jan 25 06:17:01 inet-dns CRON[16314]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)";
+  log:eventCommand "cd / && run-parts --report /etc/cron.hourly";
+  log:hasSource :source-1;
+  log:hasUser :user-1;
+  log:hasApplication :application-1;
+  log:hasTimeStamp :timestamp-1.
 
-# Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm
-:event8 rdf:type log:Event;
-  log:message "Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-20"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-20T11:12:22"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 20;
-      time:hour 11;
-      time:minute 12;
-      time:second 22;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "kernel";
-  ].
+# cloud_share, suricata.log.csv, 20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx' for http_stat_msg
+:datetime-2 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 20;
+  time:hour 13;
+  time:minute 16;
+  time:second 23.
 
-# "Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection."
-:event9 rdf:type log:Event;
-  log:message "Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection.";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDate "2022-01-24"^^xsd:date;
-    time:inXSDDateTimeStamp "2022-01-24T22:48:53"^^xsd:dateTime;
-    time:inXSDGYear "2022"^^xsd:gYear;
-    time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
-    time:inDateTime [
-      rdf:type time:GeneralDateTimeDescription;
-      time:month 1;
-      time:day 24;
-      time:hour 22;
-      time:minute 48;
-      time:second 53;
-    ];
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:processname "systemd-timesyncd";
-    log:pid 30824;
-  ].
+:timestamp-2 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-20"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-20T13:16:23"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-2.
 
-# 5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...
-:event10 rdf:type log:Event;
-  log:message "5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...";
-  log:hasTimeStamp [
-    rdf:type log:TimeStamp;
-    time:inXSDDateTimeStamp "2022-01-20T11:12:22"^^xsd:dateTime;
-  ];
-  log:hasProcess [
-    rdf:type log:Process;
-    log:pid 5030;
-  ].
+:application-2 rdf:type log:Application;
+  log:applicationName "suricata".
+
+:source-2 rdf:type log:Source;
+  log:sourceName "suricata.log.csv";
+  log:sourceType "csv";
+  log:sourceDevice "cloud_share".
+
+:event-2 rdf:type log:Event;
+  log:eventMessage "20/1/2022 -- 13:16:23 - <Perf> - using shared mpm ctx\' for http_stat_msg";
+  log:hasTimeStamp :timestamp-2;
+  log:hasApplication :application-2;
+  log:hasSource :source-2.
+
+# inet-dns, dnsmasq.log.csv, Jan 20 13:47:21 dnsmasq[3326]: query[AAAA] d1zkz3k4cclnv6.cloudfront.net from 192.168.231.180
+:datetime-3 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 20;
+  time:hour 13;
+  time:minute 47;
+  time:second 21.
+
+:timestamp-3 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-20"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-20T13:47:21"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-3.
+
+:process-3 rdf:type log:Process;
+  log:pid 3326.
+
+:application-3 rdf:type log:Application;
+  log:applicationName "dnsmasq";
+  log:hasProcess :process-3.
+
+:address-3 rdf:type log:Address;
+  log:hostname "d1zkz3k4cclnv6.cloudfront.net";
+  log:ipv4 "192.168.231.180".
+
+:source-3 rdf:type log:Source;
+  log:sourceName "dnsmasq.log.csv";
+  log:sourceType "csv";
+  log:sourceDevice "inet-dns".
+
+:event-3 rdf:type log:Event;
+  log:eventMessage "Jan 20 13:47:21 dnsmasq[3326]: query[AAAA] d1zkz3k4cclnv6.cloudfront.net from 192.168.231.180";
+  log:hasTimeStamp :timestamp-3;
+  log:hasProcess :process-3;
+  log:hasAddress :address-3;
+  log:hasSource :source-3.
+
+# mail, mail.log.csv, Jan 23 08:06:19 mail dovecot: imap(traci.stevenson): Logged out in=70 out=599
+:datetime-4 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 23;
+  time:hour 8;
+  time:minute 6;
+  time:second 19.
+
+:timestamp-4 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-23"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-23T08:06:19"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-4.
+
+:application-4 rdf:type log:Application;
+  log:applicationName "dovecot".
+
+:user-4 rdf:type log:User;
+  log:userName "traci.stevenson".
+
+:source-4 rdf:type log:Source;
+  log:sourceName "mail.log.csv";
+  log:sourceType "csv";
+  log:sourceDevice "mail".
+
+:event-4 rdf:type log:Event;
+  log:eventMessage "Jan 23 08:06:19 mail dovecot: imap(traci.stevenson): Logged out in=70 out=599";
+  log:hasTimeStamp :timestamp-4;
+  log:hasApplication :application-4;
+  log:hasUser :user-4;
+  log:hasSource :source-4.
+
+# vpn, syslog.3.csv, Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...
+:datetime-5 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 22;
+  time:hour 19;
+  time:minute 12;
+  time:second 9.
+
+:timestamp-5 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-22"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-22T19:12:09"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-5.
+
+:process-5 rdf:type log:Process;
+  log:pid 1.
+
+:application-5 rdf:type log:Application;
+  log:applicationName "systemd";
+  log:hasProcess :process-5.
+
+:source-5 rdf:type log:Source;
+  log:sourceName "syslog.3.csv";
+  log:sourceType "csv";
+  log:sourceDevice "vpn".
+
+:event-5 rdf:type log:Event;
+  log:eventMessage "Jan 22 19:12:09 vpn systemd[1]: Starting Daily apt download activities...";
+  log:hasTimeStamp :timestamp-5;
+  log:hasApplication :application-5;
+  log:hasSource :source-5.
+
+# mail, stats.log.csv, "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)"
+:datetime-6 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 23;
+  time:hour 6;
+  time:minute 42;
+  time:second 5.
+
+:timestamp-6 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-23"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-23T06:42:05"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-6.
+
+:source-6 rdf:type log:Source;
+  log:sourceName "stats.log.csv";
+  log:sourceType "csv";
+  log:sourceDevice "mail".
+
+:event-6 rdf:type log:Event;
+  log:eventMessage "Date: 1/23/2022 -- 06:42:05 (uptime: 2d, 17h 25m 39s)";
+  log:hasTimeStamp :timestamp-6;
+  log:hasSource :source-6.
+
+# morris_mail, syslog.csv, Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).
+:datetime-7 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 25;
+  time:hour 6;
+  time:minute 57;
+  time:second 57.
+
+:timestamp-7 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-25"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-25T06:57:57"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-7.
+
+:process-7 rdf:type log:Process;
+  log:pid 1993.
+
+:application-7 rdf:type log:Application;
+  log:applicationName "systemd";
+  log:hasProcess :process-7.
+
+:source-7 rdf:type log:Source;
+  log:sourceName "syslog.csv";
+  log:sourceType "csv";
+  log:sourceDevice "morris-mail".
+
+:event-7 rdf:type log:Event;
+  log:eventMessage "Jan 25 06:57:57 morris-mail systemd[1993]: Closed GnuPG cryptographic agent (access for web browsers).";
+  log:hasTimeStamp :timestamp-7;
+  log:hasApplication :application-7;
+  log:hasSource :source-7.
+
+# inet-dns, syslog.4.csv, Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm
+:datetime-8 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 20;
+  time:hour 11;
+  time:minute 12;
+  time:second 22.
+
+:timestamp-8 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-20"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-20T11:12:22"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-8.
+
+:application-8 rdf:type log:Application;
+  log:applicationName "kernel".
+
+:source-8 rdf:type log:Source;
+  log:sourceName "syslog.4.csv";
+  log:sourceType "csv";
+  log:sourceDevice "inet-dns".
+
+:event-8 rdf:type log:Event;
+  log:eventMessage "Jan 20 11:12:22 inet-dns kernel: [    3.552456] raid6: using avx2x2 recovery algorithm";
+  log:hasTimeStamp :timestamp-8;
+  log:hasApplication :application-8;
+  log:hasSource :source-8.
+
+# webserver, syslog.1.csv, "Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection."
+:datetime-9 rdf:type time:GeneralDateTimeDescription;
+  time:month 1;
+  time:day 24;
+  time:hour 22;
+  time:minute 48;
+  time:second 53.
+
+:timestamp-9 rdf:type log:TimeStamp;
+  time:inXSDDate "2022-01-24"^^xsd:date;
+  time:inXSDDateTimeStamp "2022-01-24T22:48:53"^^xsd:dateTime;
+  time:inXSDGYear "2022"^^xsd:gYear;
+  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inDateTime :datetime-9.
+
+:process-9 rdf:type log:Process;
+  log:pid 30824.
+
+:application-9 rdf:type log:Application;
+  log:applicationName "systemd-timesyncd";
+  log:hasProcess :process-9.
+
+:source-9 rdf:type log:Source;
+  log:sourceName "syslog.1.csv";
+  log:sourceType "csv";
+  log:sourceDevice "webserver".
+
+:event-9 rdf:type log:Event;
+  log:eventMessage "Jan 24 22:48:53 webserver systemd-timesyncd[30824]: Network configuration changed, trying to establish connection.";
+  log:hasTimeStamp :timestamp-9;
+  log:hasApplication :application-9;
+  log:hasSource :source-9.
+
+# cloud_share, redis-server.log.1.csv, 5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...
+:address-10 rdf:type log:Address;
+  log:addressPort "5030".
+
+:process-10 rdf:type log:Process;
+  log:processSignal "SIGTERM".
+
+:application-10 rdf:type log:Application;
+  log:applicationName "redis";
+  log:hasProcess :process-10.
+
+:source-10 rdf:type log:Source;
+  log:sourceName "redis-server.log.1.csv";
+  log:sourceType "csv";
+  log:sourceDevice "cloud_share".
+
+:event-10 rdf:type log:Event;
+  log:eventMessage "5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...";
+  log:hasTimeStamp :timestamp-10;
+  log:hasApplication :application-10;
+  log:hasAddress :address-10;
+  log:hasSource :source-10.
 
