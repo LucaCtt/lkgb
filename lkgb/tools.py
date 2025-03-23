@@ -58,7 +58,7 @@ def fetch_ip_address_info(ip_address: IPvAnyAddress) -> IPAddressInfo | IPAddres
     try:
         response = requests.get(
             f"https://ipapi.co/{ip_address}/json",
-            timeout=10000,
+            timeout=2000,
         )
         response.raise_for_status()
         data = response.json()

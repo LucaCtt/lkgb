@@ -12,9 +12,10 @@ langchain = "^0.3.18"
 langchain-community = "^0.3.17"
 python-dotenv = "^1.0.1"
 pandas = "^2.2.3"
-tqdm = "^4.67.1"
 neo4j = "^5.28.1"
 pydantic = "^2.10.6"
+langchain-neo4j = "^0.4.0"
+typer = "^0.15.2"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
@@ -38,7 +39,7 @@ optional = true
 langchain-ollama = "^0.2.3"
 
 [tool.poetry.scripts]
-parse = "lkgb.__main__:main"
+lkgb = "lkgb.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]
@@ -53,8 +54,10 @@ select = [
     "ALL", # include all the rules, including new ones
 ]
 ignore = [
+    "D101", # Missing docstring in public class
     "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
+    "D106", # Missing docstring in public nested class
     "D107",
     "D203",
     "D213",

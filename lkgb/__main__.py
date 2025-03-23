@@ -7,7 +7,9 @@ the reading of the logs, and the construction of the knowledge graph.
 import logging
 
 import pandas as pd
-from tqdm import tqdm
+import typer
+from rich.logging import RichHandler
+from rich.progress import track
 
 from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.config import Config
@@ -16,24 +18,31 @@ from lkgb.reports import RunSummary
 from lkgb.store import EventsStore
 
 # Set up logging format
-log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s] (%(module)s) %(message)s")
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-logging.getLogger().addHandler(console_handler)
+logging.basicConfig(format="%(message)s", handlers=[RichHandler(omit_repeated_times=False)])
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
+
+logger.info("Experiment ID: %s", Config.experiment_id)
 
 # Set the backend
 if Config.use_ollama_backend:
-    logger.info("Using Ollama backend")
+    logger.info("Using Ollama backend.")
     backend = OllamaBackend()
 else:
-    logger.info("Using HuggingFace backend")
+    logger.info("Using HuggingFace backend.")
     backend = HuggingFaceBackend()
 
 # Load the embeddings model
 embeddings = backend.get_embeddings(model=Config.embeddings_model)
+logger.info("Embeddings model '%s' loaded.", Config.embeddings_model)
+
+# Load the parser model
+llm = backend.get_parser_model(
+    model=Config.parser_model,
+    temperature=Config.parser_temperature,
+)
+logger.info("Language model '%s' loaded.", Config.parser_model)
 
 # Create the vector store
 store = EventsStore(
@@ -43,24 +52,23 @@ store = EventsStore(
     embeddings=embeddings,
     experiment_id=Config.experiment_id,
 )
-
-store.clear()
 store.initialize(Config.ontology_path, Config.examples_path)
+logger.info("Store at %s initialized.", Config.neo4j_url)
 
-# Create the parser model
-parser_model = backend.get_parser_model(
-    model=Config.parser_model,
-    temperature=Config.parser_temperature,
-)
+parser = Parser(llm, store, Config.prompt_build_graph, Config.self_reflection_steps)
 
-parser = Parser(
-    parser_model,
-    store,
-    Config.self_reflection_steps,
-)
+app = typer.Typer()
 
 
-def main() -> None:
+@app.command()
+def clean() -> None:
+    logger.info("Cleaning up the store.")
+    store.clean()
+    logger.info("Store cleaned.")
+
+
+@app.command()
+def parse() -> None:
     logger.info("Reading logs from %s", Config.test_log_path)
 
     events_df = pd.read_csv(Config.test_log_path, comment="#")
@@ -68,7 +76,7 @@ def main() -> None:
     events_df = events_df.fillna("")
 
     reports = []
-    for event in tqdm(events_df["Log Event"], desc="Processing logs", colour="blue"):
+    for event in track(events_df["Log Event"], description="Processing logs"):
         report = parser.parse(event)
         reports.append(report)
 
@@ -81,4 +89,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    app()

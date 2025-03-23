@@ -5,13 +5,21 @@ Environment variables can be set in the shell before running the script, or in a
 in the root directory of the project.
 """
 
+import hashlib
 import os
 import uuid
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _compute_file_hash(file_path: str) -> str:
+    """Compute the SHA256 hash of a file."""
+    with Path(file_path).open("rb", buffering=0) as f:
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 
 class Config:
@@ -25,12 +33,21 @@ class Config:
 
     # The path to the ontology file.
     ontology_path = os.getenv("ONTOLOGY_PATH", "resources/ontologies/logs_dictionary.ttl")
+    # Autocomputed, used to check if the ontology file has changed between experiments,
+    # which should not happen.
+    ontology_hash = _compute_file_hash(ontology_path)
 
     # The path to the examples log graphs file.
     examples_path = os.getenv("EXAMPLES_PATH", "resources/data/train.ttl")
+    # Autocomputed, used to check if the examples file has changed between experiments,
+    # which should not happen.
+    examples_hash = _compute_file_hash(examples_path)
 
     # The input path to the logs to parse.
     test_log_path = os.getenv("TEST_LOG_PATH", "resources/data/test.csv")
+
+    # The prompt used to build the graph
+    prompt_build_graph = os.getenv("PROMPT_BUILD_GRAPH", Path("resource/prompts/build_graph.systemd.md").read_text())
 
     # Neo4j config
     neo4j_url = os.getenv("NEO4J_URL", "bolt://localhost:7687")

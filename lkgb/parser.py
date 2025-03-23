@@ -20,34 +20,6 @@ class _EventGraph(BaseModel):
     relationships: list
 
 
-system_prompt = (
-    "## 1. Overview\n"
-    "You are a top-tier algorithm designed for extracting information from a log event "
-    "in structured formats to build a knowledge graph according to an ontology.\n"
-    "Try to capture as much information from the event as possible without sacrificing accuracy. "
-    "Do not add any information that is not explicitly mentioned in the event.\n"
-    "- The aim is to achieve exhaustiveness in the knowledge graph, making it ontology-compliant.\n"
-    "- **IDs**: IDs must be unique for each node and consistent when referenced."
-    "## 2. Context Enrichment\n"
-    "Use the provided tool to retrieve additional information about IP addresses you find.\n"
-    "Use the additional information to enrich the knowledge graph.\n"
-    "## 3. Strict Compliance\n"
-    "Adhere to the rules strictly. Non-compliance will result in termination."
-)
-
-gen_graph_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            system_prompt,
-        ),
-        ("placeholder", "{examples}"),
-        ("human", "Event: '{event}'"),
-        ("placeholder", "{messages}"),
-    ],
-)
-
-
 def _get_example_group(event: str, graph: GraphDocument) -> list[BaseMessage]:
     nodes = [
         {
@@ -94,10 +66,12 @@ class Parser:
         self,
         parser_model: BaseLanguageModel,
         store: EventsStore,
+        prompt_build_graph: str,
         self_reflection_steps: int,
     ) -> "Parser":
         self.history = ChatMessageHistory()
         self.store = store
+        self.prompt_build_graph = prompt_build_graph
         self.self_reflection_steps = self_reflection_steps
 
         try:
@@ -113,6 +87,18 @@ class Parser:
         # Add the graph structure to the structured output.
         # Also include raw output to retrieve eventual errors.
         structured_model = structured_model.with_structured_output(self.__create_graph_structure(), include_raw=True)
+
+        gen_graph_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    self.prompt_build_graph,
+                ),
+                ("placeholder", "{examples}"),
+                ("human", "Event: '{event}'"),
+                ("placeholder", "{messages}"),
+            ],
+        )
 
         self.chain = gen_graph_prompt | structured_model
 
