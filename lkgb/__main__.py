@@ -4,9 +4,10 @@ Handles the instantiation of the parser and the backend,
 the reading of the logs, and the construction of the knowledge graph.
 """
 
+import csv
 import logging
+from pathlib import Path
 
-import pandas as pd
 import typer
 from rich.logging import RichHandler
 from rich.progress import track
@@ -21,11 +22,8 @@ config = Config()
 
 # Set up logging format
 logging.basicConfig(format="%(message)s", handlers=[RichHandler(omit_repeated_times=False)])
-
 logger = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
-
-logger.info("Experiment ID: %s", config.experiment_id)
 
 # Set the backend
 if config.use_ollama_backend:
@@ -39,13 +37,6 @@ else:
 embeddings = backend.get_embeddings(model=config.embeddings_model)
 logger.info("Embeddings model '%s' loaded.", config.embeddings_model)
 
-# Load the parser model
-llm = backend.get_parser_model(
-    model=config.parser_model,
-    temperature=config.parser_temperature,
-)
-logger.info("Language model '%s' loaded.", config.parser_model)
-
 # Create the vector store
 store = EventsStore(
     url=config.neo4j_url,
@@ -54,33 +45,47 @@ store = EventsStore(
     embeddings=embeddings,
     experiment_id=config.experiment_id,
 )
-store.initialize(config.dump())
-logger.info("Store at %s initialized.", config.neo4j_url)
-
-parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
 
 app = typer.Typer()
 
 
 @app.command()
-def clean() -> None:
-    logger.info("Cleaning up the store.")
-    store.clean()
-    logger.info("Store cleaned.")
+def clear() -> None:
+    store.clear()
+    logger.info("Store cleared.")
 
 
 @app.command()
 def parse() -> None:
+    logger.info("Experiment ID: %s", config.experiment_id)
+
+    # Load the parser model
+    llm = backend.get_parser_model(
+        model=config.parser_model,
+        temperature=config.parser_temperature,
+    )
+    logger.info("Language model '%s' loaded.", config.parser_model)
+
+    store.initialize(config.dump())
+    logger.info("Store at %s initialized.", config.neo4j_url)
+
+    parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
     logger.info("Reading logs from %s", config.test_log_path)
 
-    events_df = pd.read_csv(config.test_log_path, comment="#")
-    # To prevent weird stuff with NaNs
-    events_df = events_df.fillna("")
-
     reports = []
-    for event in track(events_df["Log Event"], description="Processing logs"):
-        report = parser.parse(event)
-        reports.append(report)
+
+    # Open the test log file once to get the number of lines,
+    # without loading it all into memory
+    with Path(config.test_log_path).open() as file:
+        n_lines = sum(1 for _ in file)
+
+    # Now open the file again and parse the logs
+    with Path(config.test_log_path).open() as file:
+        events = csv.DictReader(filter(lambda row: row[0] != "#", file))
+
+        for event in track(events, description="Parsing logs", total=n_lines):
+            report = parser.parse(event["Log Event"], {"file": event["File"], "device": event["Device"]})
+            reports.append(report)
 
     logger.info("Log parsing done.")
 
@@ -90,5 +95,9 @@ def parse() -> None:
     logger.info("- Average total time taken to parse each log: %s", summary.avg_total_time_taken())
 
 
-if __name__ == "__main__":
+def main() -> None:
     app()
+
+
+if __name__ == "__main__":
+    main()

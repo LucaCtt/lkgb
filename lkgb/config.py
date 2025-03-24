@@ -44,7 +44,7 @@ class Config:
     test_log_path = os.getenv("TEST_LOG_PATH", "resources/data/test.csv")
 
     # The prompt used to build the graph
-    prompt_build_graph = os.getenv("PROMPT_BUILD_GRAPH", Path("resource/prompts/build_graph.systemd.md").read_text())
+    prompt_build_graph = os.getenv("PROMPT_BUILD_GRAPH", Path("resources/prompts/build_graph.system.md").read_text())
 
     # Neo4j config
     neo4j_url = os.getenv("NEO4J_URL", "bolt://localhost:7687")
@@ -101,11 +101,17 @@ class Config:
         return _compute_file_hash(self.examples_path)
 
     def dump(self) -> dict[str, Any]:
-        """Dump the configuration as a dictionary."""
+        """Dump the configuration as a dictionary.
+
+        This method also includes the ontology and examples hash.
+        Authentication params are not included in the dump for security reasons.
+        """
+        excluded_prefixes = ["_", "neo4j", "huggingface_api_token"]
+
         dump = {
             key: value
             for key, value in self.__class__.__dict__.items()
-            if not key.startswith("_") and not callable(value)
+            if not any(key.startswith(prefix) for prefix in excluded_prefixes) and not callable(value)
         }
         dump["ontology_hash"] = self.ontology_hash()
         dump["examples_hash"] = self.examples_hash()

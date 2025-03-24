@@ -1,6 +1,5 @@
 """Parser module for parsing log events and constructing knowledge graphs."""
 
-import uuid
 from typing import cast
 
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -20,7 +19,7 @@ class _EventGraph(BaseModel):
     relationships: list
 
 
-def _get_example_group(event: str, graph: GraphDocument) -> list[BaseMessage]:
+def _get_example_group(event: str, context: dict, graph: GraphDocument) -> list[BaseMessage]:
     nodes = [
         {
             "id": node.id,
@@ -40,7 +39,7 @@ def _get_example_group(event: str, graph: GraphDocument) -> list[BaseMessage]:
     ]
 
     return [
-        HumanMessage(f"Event: '{event}", name="example_user"),
+        HumanMessage(f"Event: '{event}'\nContext: {context}", name="example_user"),
         AIMessage(
             "",
             name="example_assistant",
@@ -95,7 +94,7 @@ class Parser:
                     self.prompt_build_graph,
                 ),
                 ("placeholder", "{examples}"),
-                ("human", "Event: '{event}'"),
+                ("human", "Event: '{event}'\nContext: '{context}'"),
                 ("placeholder", "{messages}"),
             ],
         )
@@ -109,15 +108,19 @@ class Parser:
         valid_relationships = [rel.type for rel in ontology.relationships]
 
         valid_properties = []
+        valid_properties_dict = {}
         for node in ontology.nodes:
             valid_properties = valid_properties + list(node.properties.keys())
+            valid_properties_dict[node.type] = list(node.properties.keys())
+
+        valid_properties_schema = [f"{node}:{props}" for node, props in valid_properties_dict.items()]
 
         class _Property(BaseModel):
             type: str = Field(
                 description=f"The type or label of the propertye. Available options are: {valid_properties}",
                 enum=valid_properties,
             )
-            value: str = Field(description=("Extracted value."))
+            value: str | float = Field(description=("Extracted value."))
 
         class _Node(BaseModel):
             id: str = Field(description="Name or human-readable unique identifier.")
@@ -126,6 +129,11 @@ class Parser:
                 enum=valid_node_types,
             )
             properties: list[_Property | None] = Field(None, description="List of node properties.")
+
+        _Node.__doc__ = (
+            "Each node type has a specific set of available properties. "
+            f"The available properties for each node type are : {valid_properties_schema} "
+        )
 
         class _Relationship(BaseModel):
             source_id: str = Field(description="Name or human-readable unique identifier of source node.")
@@ -145,13 +153,25 @@ class Parser:
 
     def _get_examples(self, event: str) -> list[BaseMessage]:
         similar_event_graph = self.store.search_similar_events(event, k=1)
-        return _get_example_group(event, similar_event_graph[0])
 
-    def parse(self, event: str) -> ParserReport:
+        for node in similar_event_graph[0].nodes:
+            if "uri" in node.properties:
+                node.properties["uri"] = node.properties["uri"].replace("example", "run")
+
+        source_node = next((node for node in similar_event_graph[0].nodes if node.type == "Source"), None)
+        context = (
+            {"source": source_node.properties["sourceName"], "device": source_node.properties["sourceDevice"]}
+            if source_node
+            else {}
+        )
+        return _get_example_group(event, context, similar_event_graph[0])
+
+    def parse(self, event: str, context: dict) -> ParserReport:
         """Parse the given event and construct a knowledge graph.
 
         Args:
             event: The log event to parse.
+            context: The context of the event.
 
         Returns:
             A report containing the stats of the parsing process.
@@ -160,7 +180,7 @@ class Parser:
         report = ParserReport()
 
         raw_schema = self.chain.invoke(
-            {"event": event, "examples": self._get_examples(event)},
+            {"event": event, "context": context, "examples": self._get_examples(event)},
             {"configurable": {"session_id": "unused"}},
         )
 
@@ -168,7 +188,7 @@ class Parser:
 
         nodes_dict = {
             node.id: Node(
-                id=str(uuid.uuid4()),
+                id=node.id,
                 type=node.type,
                 properties={prop.type: prop.value for prop in node.properties} if node.properties else {},
             )

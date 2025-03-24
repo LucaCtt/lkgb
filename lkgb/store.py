@@ -32,7 +32,7 @@ class EventsStore:
         self.embeddings = embeddings
         self.experiment_id = experiment_id
 
-        self.graph_store = Neo4jGraph(url=url, username=username, password=password)
+        self.graph_store = Neo4jGraph(url=url, username=username, password=password, sanitize=True)
 
     def initialize(self, config_dict: dict) -> None:
         """Initialize the graph store and the vector index.
@@ -47,26 +47,27 @@ class EventsStore:
         latest_experiment = self.graph_store.query(
             """MATCH (n:Experiment)
             RETURN elementID(n) as id,
-                n.experiment_date_time as experiment_date_time,
-                n.ontology_hash as ontology,
-                n.examples_hash as examples_hash
-            ORDER BY experiment_date_time DESC
+                n.experiment_date_time as experimentDateTime,
+                n.ontology_hash as ontologyHash,
+                n.examples_hash as examplesHash
+            ORDER BY experimentDateTime DESC
             LIMIT 1
             """,
         )
         if latest_experiment:
-            if latest_experiment[0]["ontology_hash"] == config_dict["ontology_hash"]:
+            if latest_experiment[0]["ontologyHash"] != config_dict["ontology_hash"]:
                 msg = "The ontology has changed since the last experiment."
                 raise ValueError(msg)
 
-            if latest_experiment[0]["examples_hash"] == config_dict["examples_hash"]:
+            if latest_experiment[0]["examplesHash"] != config_dict["examples_hash"]:
                 msg = "The examples have changed since the last experiment."
                 raise ValueError(msg)
 
             self.graph_store.query(
                 """
-                CREATE (n:Experiment $details)<-[:SUBSEQUENT]-(m:Experiment)
+                MATCH (m:Experiment)
                 WHERE elementID(m) = $id
+                CREATE (n:Experiment $details)-[:SUBSEQUENT]->(m)
                 """,
                 params={"details": config_dict, "id": latest_experiment[0]["id"]},
             )
@@ -108,7 +109,13 @@ class EventsStore:
 
         # Create the vector index
         self.graph_store.query(
-            f"CALL db.index.vector.createIndex('{EVENTS_INDEX_NAME}', 'Event', 'embedding', 'cosine')",
+            f"""
+            CREATE VECTOR INDEX {EVENTS_INDEX_NAME}
+            FOR (n:Event) ON n.embedding
+            OPTIONS {{ indexConfig : {{
+                `vector.similarity_function` : 'cosine'
+            }} }}
+            """,
         )
 
         # Populate the embeddings for the examples
@@ -116,10 +123,10 @@ class EventsStore:
             """
             MATCH (n:Event)
             WHERE n.embedding IS null
-            RETURN elementId(n) AS id, reduce(str='', k IN $props | str + '\\n' + k + ':' + coalesce(n[k], '')) AS text
+            RETURN elementId(n) AS id, n.eventMessage as eventMessage
             """,
         )
-        text_embeddings = self.embeddings.embed_documents([el["text"] for el in to_populate])
+        text_embeddings = self.embeddings.embed_documents([el["eventMessage"] for el in to_populate])
         self.graph_store.query(
             """
             UNWIND $data AS row
@@ -138,8 +145,11 @@ class EventsStore:
     def clear(self) -> None:
         """Clear the store to its initial state."""
         self.graph_store.query("MATCH (n) DETACH DELETE n")
-        self.graph_store.query("DROP INDEX $index_name", params={"index_name": EVENTS_INDEX_NAME})
-        self.graph_store.query("DROP CONSTRAINT $constraint_name", params={"constraint_name": N10S_CONSTRAINT_NAME})
+        self.graph_store.query(
+            "DROP CONSTRAINT $constraint_name IF EXISTS",
+            params={"constraint_name": N10S_CONSTRAINT_NAME},
+        )
+        self.graph_store.query("DROP INDEX $index_name IF EXISTS", params={"index_name": EVENTS_INDEX_NAME})
 
     def ontology_graph(self) -> GraphDocument:
         """Return the ontology graph as a GraphDocument.
@@ -211,7 +221,7 @@ class EventsStore:
             additional_properties = {"experiment_id": self.experiment_id}
             if node.type == "Event":
                 # This will raise an exception if the LLM produces an Event node without a message property.
-                additional_properties["embedding"] = self.embeddings.embed_query(node.properties["message"])
+                additional_properties["embedding"] = self.embeddings.embed_query(node.properties["eventMessage"])
 
             self.graph_store.query(
                 "CALL apoc.create.node([$type], $props) YIELD node",
@@ -223,10 +233,11 @@ class EventsStore:
                 """
                 MATCH (a {uri: $source_uri}), (b {uri: $target_uri})
                 CALL apoc.create.relationship(a, $type, {}, b) YIELD rel
+                RETURN rel
                 """,
                 params={
-                    "source_uri": relationship.source.uri,
-                    "target_uri": relationship.target.uri,
+                    "source_uri": relationship.source.id,
+                    "target_uri": relationship.target.id,
                     "type": relationship.type,
                 },
             )
@@ -272,7 +283,7 @@ class EventsStore:
             [node IN nodes | {
                 uri: node.uri,
                 type: HEAD([label IN LABELS(node) WHERE label <> 'Resource']),
-                properties: apoc.map.removeKey(PROPERTIES(node), 'embedding')
+                properties: PROPERTIES(node)
             }] AS nodes,
             [rel IN relationships | {
                 source: STARTNODE(rel).uri,
