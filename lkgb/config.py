@@ -8,6 +8,7 @@ in the root directory of the project.
 import hashlib
 import os
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,20 +29,16 @@ class Config:
     Having a class for this is useful for easily exporting the configuration as a dictionary.
     """
 
+    experiment_date_time = datetime.now(UTC)
+
     # Used to distinguish between the data in different experiments.
     experiment_id = os.getenv("EXPERIMENT_ID", str(uuid.uuid4()))
 
     # The path to the ontology file.
     ontology_path = os.getenv("ONTOLOGY_PATH", "resources/ontologies/logs_dictionary.ttl")
-    # Autocomputed, used to check if the ontology file has changed between experiments,
-    # which should not happen.
-    ontology_hash = _compute_file_hash(ontology_path)
 
     # The path to the examples log graphs file.
     examples_path = os.getenv("EXAMPLES_PATH", "resources/data/train.ttl")
-    # Autocomputed, used to check if the examples file has changed between experiments,
-    # which should not happen.
-    examples_hash = _compute_file_hash(examples_path)
 
     # The input path to the logs to parse.
     test_log_path = os.getenv("TEST_LOG_PATH", "resources/data/test.csv")
@@ -84,22 +81,33 @@ class Config:
     # Must be between (strictly) 0 and 1.
     parser_temperature = float(os.getenv("PARSER_TEMPERATURE", "0.7"))
 
-    if parser_temperature < 0 or parser_temperature > 1:
-        msg = "parser_temperature must be between 0 and 1"
-        raise ValueError(msg)
-
     # The number of self-reflection steps to take.
     # Must be greater or equal than 0.
     self_reflection_steps = int(os.getenv("SELF_REFLECTION_STEPS", "3"))
 
-    if self_reflection_steps < 0:
-        msg = "self_reflection_steps must be greater than 0"
-        raise ValueError(msg)
+    def __init__(self):
+        if self.parser_temperature < 0 or self.parser_temperature > 1:
+            msg = "parser_temperature must be between 0 and 1"
+            raise ValueError(msg)
 
-    def export(self) -> dict[str, Any]:
-        """Export the configuration as a dictionary."""
-        return {
+        if self.self_reflection_steps < 0:
+            msg = "self_reflection_steps must be greater than 0"
+            raise ValueError(msg)
+
+    def ontology_hash(self) -> str:
+        return _compute_file_hash(self.ontology_path)
+
+    def examples_hash(self) -> str:
+        return _compute_file_hash(self.examples_path)
+
+    def dump(self) -> dict[str, Any]:
+        """Dump the configuration as a dictionary."""
+        dump = {
             key: value
             for key, value in self.__class__.__dict__.items()
             if not key.startswith("_") and not callable(value)
         }
+        dump["ontology_hash"] = self.ontology_hash()
+        dump["examples_hash"] = self.examples_hash()
+
+        return dump

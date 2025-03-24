@@ -62,6 +62,7 @@ ignore = [
     "D203",
     "D213",
     "E402",
+    "ANN204",
     "TD002", # Missing author in todo
     "TD003", # Missing issue link in todo 
 ]

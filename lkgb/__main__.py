@@ -17,16 +17,18 @@ from lkgb.parser import Parser
 from lkgb.reports import RunSummary
 from lkgb.store import EventsStore
 
+config = Config()
+
 # Set up logging format
 logging.basicConfig(format="%(message)s", handlers=[RichHandler(omit_repeated_times=False)])
 
 logger = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
 
-logger.info("Experiment ID: %s", Config.experiment_id)
+logger.info("Experiment ID: %s", config.experiment_id)
 
 # Set the backend
-if Config.use_ollama_backend:
+if config.use_ollama_backend:
     logger.info("Using Ollama backend.")
     backend = OllamaBackend()
 else:
@@ -34,28 +36,28 @@ else:
     backend = HuggingFaceBackend()
 
 # Load the embeddings model
-embeddings = backend.get_embeddings(model=Config.embeddings_model)
-logger.info("Embeddings model '%s' loaded.", Config.embeddings_model)
+embeddings = backend.get_embeddings(model=config.embeddings_model)
+logger.info("Embeddings model '%s' loaded.", config.embeddings_model)
 
 # Load the parser model
 llm = backend.get_parser_model(
-    model=Config.parser_model,
-    temperature=Config.parser_temperature,
+    model=config.parser_model,
+    temperature=config.parser_temperature,
 )
-logger.info("Language model '%s' loaded.", Config.parser_model)
+logger.info("Language model '%s' loaded.", config.parser_model)
 
 # Create the vector store
 store = EventsStore(
-    url=Config.neo4j_url,
-    username=Config.neo4j_username,
-    password=Config.neo4j_password,
+    url=config.neo4j_url,
+    username=config.neo4j_username,
+    password=config.neo4j_password,
     embeddings=embeddings,
-    experiment_id=Config.experiment_id,
+    experiment_id=config.experiment_id,
 )
-store.initialize(Config.ontology_path, Config.examples_path)
-logger.info("Store at %s initialized.", Config.neo4j_url)
+store.initialize(config.dump())
+logger.info("Store at %s initialized.", config.neo4j_url)
 
-parser = Parser(llm, store, Config.prompt_build_graph, Config.self_reflection_steps)
+parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
 
 app = typer.Typer()
 
@@ -69,9 +71,9 @@ def clean() -> None:
 
 @app.command()
 def parse() -> None:
-    logger.info("Reading logs from %s", Config.test_log_path)
+    logger.info("Reading logs from %s", config.test_log_path)
 
-    events_df = pd.read_csv(Config.test_log_path, comment="#")
+    events_df = pd.read_csv(config.test_log_path, comment="#")
     # To prevent weird stuff with NaNs
     events_df = events_df.fillna("")
 
