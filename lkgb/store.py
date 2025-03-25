@@ -7,11 +7,19 @@ from langchain_core.embeddings import Embeddings
 from langchain_neo4j import Neo4jGraph
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
 
-LOG_ONTOLOGY_URL = "http://example.com/logs/dictionary"
-LOG_EXAMPLES_URL = "http://example.com/logs/examples"
+LOG_ONTOLOGY_URL = "http://example.com/lkgb/logs/dictionary"
+LOG_EXAMPLES_URL = "http://example.com/lkgb/logs/examples"
+LOG_TESTS_URL = "http://example.com/lkgb/logs/tests"
 TIME_ONTOLOGY_URL = "http://www.w3.org/2006/time"
 EVENTS_INDEX_NAME = "eventMessageIndex"
 N10S_CONSTRAINT_NAME = "n10s_unique_uri"
+
+
+class TestEvent:
+    def __init__(self, event: str, context: dict, ground_truth: GraphDocument) -> "TestEvent":
+        self.event = event
+        self.context = context
+        self.ground_truth = ground_truth
 
 
 class EventsStore:
@@ -142,6 +150,13 @@ class EventsStore:
             },
         )
 
+        # Load the tests
+        # Note: the test events should not have an embedding
+        self.graph_store.query(
+            "CALL n10s.rdf.import.inline($tests, 'Turtle')",
+            params={"tests": Path(config_dict["tests_path"]).read_text()},
+        )
+
     def clear(self) -> None:
         """Clear the store to its initial state."""
         self.graph_store.query("MATCH (n) DETACH DELETE n")
@@ -242,6 +257,29 @@ class EventsStore:
                 },
             )
 
+    def get_tests(self) -> list[TestEvent]:
+        test_nodes = self.graph_store.query(
+            """
+            MATCH (n:Event)
+            WHERE n.uri STARTS WITH $log_tests_url
+            RETURN n.eventMessage as message, n.uri as uri
+            """,
+            params={"log_tests_url": LOG_TESTS_URL},
+        )
+        tests = []
+        for test in test_nodes:
+            ground_truth = self.__get_subgraph_from_node(test["uri"])
+
+            source_node = next((node for node in ground_truth.nodes if node.type == "Source"), None)
+            context = (
+                {"source": source_node.properties["sourceName"], "device": source_node.properties["sourceDevice"]}
+                if source_node
+                else {}
+            )
+            tests.append(TestEvent(event=test["message"], context=context, ground_truth=ground_truth))
+
+        return tests
+
     def search_similar_events(self, event: str, k: int = 5) -> list[GraphDocument]:
         """Search for similar events in the store.
 
@@ -315,7 +353,7 @@ class EventsStore:
                 type=relationship["type"],
             )
             for relationship in nodes_subgraph["relationships"]
-        ]
+        ] if "relationships" in nodes_subgraph else []
 
         return GraphDocument(
             nodes=list(nodes_dict.values()),

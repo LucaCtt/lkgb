@@ -4,9 +4,7 @@ Handles the instantiation of the parser and the backend,
 the reading of the logs, and the construction of the knowledge graph.
 """
 
-import csv
 import logging
-from pathlib import Path
 
 import typer
 from rich.logging import RichHandler
@@ -69,30 +67,28 @@ def parse() -> None:
     store.initialize(config.dump())
     logger.info("Store at %s initialized.", config.neo4j_url)
 
+    test_events = store.get_tests()
+    logger.info("Read %d tests from '%s'", len(test_events), config.tests_path)
+
     parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
-    logger.info("Reading logs from %s", config.test_log_path)
 
     reports = []
+    for test in track(test_events, description="Parsing events"):
+        report = parser.parse(test.event, test.context)
+        reports.append(report)
 
-    # Open the test log file once to get the number of lines,
-    # without loading it all into memory
-    with Path(config.test_log_path).open() as file:
-        n_lines = sum(1 for _ in file)
-
-    # Now open the file again and parse the logs
-    with Path(config.test_log_path).open() as file:
-        events = csv.DictReader(filter(lambda row: row[0] != "#", file))
-
-        for event in track(events, description="Parsing logs", total=n_lines):
-            report = parser.parse(event["Log Event"], {"file": event["File"], "device": event["Device"]})
-            reports.append(report)
+        if report.error:
+            logger.error("Error parsing log: %s", report.error)
+        else:
+            store.add_event_graph(report.graph)
 
     logger.info("Log parsing done.")
 
     summary = RunSummary(reports)
 
     logger.info("Run summary:")
-    logger.info("- Average total time taken to parse each log: %s", summary.avg_total_time_taken())
+    logger.info("- Average log parse time: %s", summary.parse_time_average())
+    logger.info("- Success percentage: %s", summary.success_percentage())
 
 
 def main() -> None:

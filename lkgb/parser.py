@@ -123,7 +123,9 @@ class Parser:
             value: str | float = Field(description=("Extracted value."))
 
         class _Node(BaseModel):
-            id: str = Field(description="Name or human-readable unique identifier.")
+            id: str = Field(
+                description="Name or human-readable unique identifier. Must always begin with http://example.com/lkgb/runs",
+            )
             type: str = Field(
                 description=f"The type or label of the node. Available options are: {valid_node_types}",
                 enum=valid_node_types,
@@ -154,10 +156,6 @@ class Parser:
     def _get_examples(self, event: str) -> list[BaseMessage]:
         similar_event_graph = self.store.search_similar_events(event, k=1)
 
-        for node in similar_event_graph[0].nodes:
-            if "uri" in node.properties:
-                node.properties["uri"] = node.properties["uri"].replace("example", "run")
-
         source_node = next((node for node in similar_event_graph[0].nodes if node.type == "Source"), None)
         context = (
             {"source": source_node.properties["sourceName"], "device": source_node.properties["sourceDevice"]}
@@ -186,6 +184,9 @@ class Parser:
 
         raw_schema = cast(dict, raw_schema)
 
+        if not raw_schema["parsed"]:
+            return report.failure(raw_schema["parsing_error"])
+
         nodes_dict = {
             node.id: Node(
                 id=node.id,
@@ -202,6 +203,5 @@ class Parser:
             relationships.append(Relationship(source=source_node, target=target_node, type=rel.type))
 
         graph = GraphDocument(nodes=list(nodes_dict.values()), relationships=relationships)
-        self.store.add_event_graph(graph)
 
-        return report.finish()
+        return report.success(graph)

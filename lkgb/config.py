@@ -41,7 +41,7 @@ class Config:
     examples_path = os.getenv("EXAMPLES_PATH", "resources/data/train.ttl")
 
     # The input path to the logs to parse.
-    test_log_path = os.getenv("TEST_LOG_PATH", "resources/data/test.csv")
+    tests_path = os.getenv("TEST_LOG_PATH", "resources/data/test.ttl")
 
     # The prompt used to build the graph
     prompt_build_graph = os.getenv("PROMPT_BUILD_GRAPH", Path("resources/prompts/build_graph.system.md").read_text())

@@ -2,6 +2,8 @@
 
 from datetime import UTC, datetime
 
+from langchain_neo4j.graphs.graph_document import GraphDocument
+
 
 class ParserReport:
     """A class to generate and manage reports for parsing operations.
@@ -13,8 +15,25 @@ class ParserReport:
         self,
     ) -> "ParserReport":
         self.start_dt = datetime.now(tz=UTC)
+        self.error: Exception | None = None
+        self.graph: GraphDocument | None = None
 
-    def finish(self) -> "ParserReport":
+    def failure(self, error: Exception) -> "ParserReport":
+        """Mark the end of the parsing process by setting the end datetime.
+
+        Args:
+            error (Exception): The error that occurred during the parsing process.
+
+        Returns:
+            ParserReport: The instance of the ParserReport with the updated end datetime.
+
+        """
+        self.end_dt = datetime.now(tz=UTC)
+        self.error = error
+
+        return self
+
+    def success(self, graph: GraphDocument) -> "ParserReport":
         """Mark the end of the parsing process by setting the end datetime.
 
         Args:
@@ -25,6 +44,7 @@ class ParserReport:
 
         """
         self.end_dt = datetime.now(tz=UTC)
+        self.graph = graph
 
         return self
 
@@ -47,7 +67,7 @@ class RunSummary:
     def __init__(self, parser_reports: list[ParserReport]) -> "RunSummary":
         self.parser_reports = parser_reports
 
-    def avg_total_time_taken(self) -> float:
+    def parse_time_average(self) -> float:
         """Calculate the average total time taken from all parser reports.
 
         Returns:
@@ -55,3 +75,12 @@ class RunSummary:
 
         """
         return sum(report.total_time_taken() for report in self.parser_reports) / len(self.parser_reports)
+
+    def success_percentage(self) -> float:
+        """Calculate the percentage of successful parser reports.
+
+        Returns:
+            float: The percentage of successful parser reports.
+
+        """
+        return len([report for report in self.parser_reports if not report.error]) / len(self.parser_reports)
