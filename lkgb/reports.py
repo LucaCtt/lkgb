@@ -15,7 +15,7 @@ class ParserReport:
         self,
     ) -> "ParserReport":
         self.start_dt = datetime.now(tz=UTC)
-        self.error: Exception | None = None
+        self.error: Exception | str | None = None
         self.graph: GraphDocument | None = None
 
     def failure(self, error: Exception) -> "ParserReport":

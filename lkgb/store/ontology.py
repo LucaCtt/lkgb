@@ -11,43 +11,45 @@ N10S_CONSTRAINT_NAME = "n10s_unique_uri"
 
 
 class Ontology:
-    def __init__(self, driver: Driver) -> "Ontology":
-        self.driver = driver
+    def __init__(self, driver: Driver, config: Config) -> "Ontology":
+        self.__driver = driver
+        self.__config = config
 
-    def initialize(self, config: Config) -> None:
+    def initialize(self) -> None:
         # Check if the neosemantics configuration is present,
-        # if it is, assume the ontology and examples are already loaded.
-        result = self.driver.query("MATCH (n:_GraphConfig) RETURN COUNT(n) AS count")
+        # if it is, assume the ontology is already loaded.
+        result = self.__driver.query("MATCH (n:_GraphConfig) RETURN COUNT(n) AS count")
         if result[0]["count"] != 0:
             return
 
         # Init neosemantics plugin
-        self.driver.query("CALL n10s.graphconfig.init()")
-        self.driver.query("CALL n10s.graphconfig.set({ handleVocabUris: 'IGNORE' })")
-        self.driver.query(f"CREATE CONSTRAINT {N10S_CONSTRAINT_NAME} FOR (r:Resource) REQUIRE r.uri IS UNIQUE")
+        self.__driver.query("CALL n10s.graphconfig.init()")
+        self.__driver.query("CALL n10s.graphconfig.set({ handleVocabUris: 'IGNORE' })")
+        self.__driver.query(f"CREATE CONSTRAINT {N10S_CONSTRAINT_NAME} FOR (r:Resource) REQUIRE r.uri IS UNIQUE")
 
         # Load the ontologies
-        self.driver.query(
+        self.__driver.query(
             "CALL n10s.onto.import.inline($ontology, 'Turtle')",
-            params={"ontology": Path(config.ontology_path).read_text()},
+            params={"ontology": Path(self.__config.ontology_path).read_text()},
         )
-        self.driver.query(
+        self.__driver.query(
             "CALL n10s.onto.import.fetch($url, 'Turtle')",
             params={"url": TIME_ONTOLOGY_URL},
         )
 
     def clear(self) -> None:
         """Clear the store to its initial state."""
-        self.driver.query(
+        self.__driver.query("MATCH (n:_GraphConfig) DETACH DELETE n")
+        self.__driver.query(
             "MATCH (n:Resource) WHERE n.uri STARTS WITH $time_url OR n.uri STARTS WITH $log_url DETACH DELETE n",
             params={"time_url": TIME_ONTOLOGY_URL, "log_url": LOG_ONTOLOGY_URL},
         )
-        self.driver.query(
+        self.__driver.query(
             "DROP CONSTRAINT $constraint_name IF EXISTS",
             params={"constraint_name": N10S_CONSTRAINT_NAME},
         )
 
-    def ontology_graph(self) -> GraphDocument:
+    def graph(self) -> GraphDocument:
         """Return the ontology graph as a GraphDocument.
 
         The returned nodes and relationship types will be without uris. This may not be the best idea,
@@ -61,7 +63,7 @@ class Ontology:
             and relationships are relationships between classes.
 
         """
-        nodes_with_props = self.driver.query(
+        nodes_with_props = self.__driver.query(
             """
             MATCH (c:Class)
             WHERE c.uri STARTS WITH $log_ontology_url OR c.uri = $time_instant_url
@@ -78,7 +80,7 @@ class Ontology:
             row["uri"]: Node(id=row["uri"], type=row["class"], properties=row["properties"]) for row in nodes_with_props
         }
 
-        triples = self.driver.query(
+        triples = self.__driver.query(
             """
             MATCH (n:Class)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Class)
             WHERE n.uri STARTS WITH $log_ontology_url

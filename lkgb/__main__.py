@@ -10,6 +10,7 @@ import typer
 from rich.logging import RichHandler
 from rich.progress import track
 
+from lkgb.accuracy import graph_edit_distance
 from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.config import Config
 from lkgb.parser import Parser
@@ -55,9 +56,9 @@ def parse() -> None:
     logger.info("Language model: '%s'", config.parser_model)
 
     store.initialize()
-    logger.info("Store at %s initialized.", config.neo4j_url)
+    logger.info("Store at '%s' initialized.", config.neo4j_url)
 
-    test_events = store.get_tests()
+    test_events = store.dataset.tests()
     logger.info("Read %d tests from '%s'", len(test_events), config.tests_path)
 
     parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
@@ -68,18 +69,22 @@ def parse() -> None:
         report = parser.parse(test.event, test.context)
         reports.append(report)
 
-        if report.error:
-            logger.error("Error parsing log: %s", report.error)
+        if report.error is not None:
+            logger.warning("Event could not be parsed: %s", report.error)
         else:
-            store.add_event_graph(report.graph)
+            store.dataset.add_event_graph(report.graph)
+            average_ged += graph_edit_distance(report.graph, test.ground_truth)
+            logger.debug("GED: %f", graph_edit_distance(report.graph, test.ground_truth))
+    average_ged /= len(test_events)
 
     logger.info("Log parsing done.")
 
     summary = RunSummary(reports)
 
     logger.info("Run summary:")
-    logger.info("- Average log parse time: %s", summary.parse_time_average())
-    logger.info("- Success percentage: %s", summary.success_percentage())
+    logger.info("- Average parse time per event: %f seconds", summary.parse_time_average())
+    logger.info("- Success percentage: %f%%", summary.success_percentage()*100)
+    logger.info("- Average GED: %f", average_ged)
 
 
 def main() -> None:

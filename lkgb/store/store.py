@@ -11,14 +11,14 @@ class Store:
         self.__config = config
         self.__embeddings = embeddings
 
-        self.driver = Driver(config.neo4j_url, config.neo4j_username, config.neo4j_password)
-        self.ontology = Ontology(self.driver)
-        self.dataset = Dataset(self.driver, self.__embeddings)
+        self.driver = Driver(self.__config)
+        self.ontology = Ontology(self.driver, self.__config)
+        self.dataset = Dataset(self.driver, self.__embeddings, self.__config)
 
     def initialize(self) -> None:
-        self.driver.initialize(self.__config)
-        self.ontology.initialize(self.__config)
-        self.dataset.initialize(self.__config)
+        self.driver.initialize()
+        self.ontology.initialize()
+        self.dataset.initialize()
 
     def clear(self) -> None:
         self.driver.clear()

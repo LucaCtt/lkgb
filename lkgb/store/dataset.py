@@ -8,7 +8,7 @@ from lkgb.store.driver import Driver
 
 EVENTS_INDEX_NAME = "eventMessageIndex"
 LOG_EXAMPLES_URL = "http://example.com/lkgb/logs/examples"
-LOG_TESTS_URL = "http://example.com/lkgb/logs/examples"
+LOG_TESTS_URL = "http://example.com/lkgb/logs/tests"
 
 
 class TestEvent:
@@ -19,19 +19,30 @@ class TestEvent:
 
 
 class Dataset:
-    def __init__(self, driver: Driver, embeddings: Embeddings) -> "Dataset":
-        self.driver = driver
-        self.embeddings = embeddings
+    def __init__(self, driver: Driver, embeddings: Embeddings, config: Config) -> "Dataset":
+        self.__driver = driver
+        self.__embeddings = embeddings
+        self.__config = config
 
-    def initialize(self, config: Config) -> None:
+    def initialize(self) -> None:
+        # Check if the examples are already loaded
+        result = self.__driver.query(
+            """
+            MATCH (n:Resource) WHERE n.uri STARTS WITH $examples_uri RETURN COUNT(n) AS count
+            """,
+            params={"examples_uri": LOG_EXAMPLES_URL},
+        )
+        if result[0]["count"] != 0:
+            return
+
         # Load the examples
-        self.driver.query(
+        self.__driver.query(
             "CALL n10s.rdf.import.inline($examples, 'Turtle')",
-            params={"examples": Path(config.examples_path).read_text()},
+            params={"examples": Path(self.__config.examples_path).read_text()},
         )
 
         # Create the vector index
-        self.driver.query(
+        self.__driver.query(
             f"""
             CREATE VECTOR INDEX {EVENTS_INDEX_NAME}
             FOR (n:Event) ON n.embedding
@@ -42,15 +53,15 @@ class Dataset:
         )
 
         # Populate the embeddings for the examples
-        to_populate = self.driver.query(
+        to_populate = self.__driver.query(
             """
             MATCH (n:Event)
             WHERE n.embedding IS null
             RETURN elementId(n) AS id, n.eventMessage as eventMessage
             """,
         )
-        text_embeddings = self.embeddings.embed_documents([el["eventMessage"] for el in to_populate])
-        self.driver.query(
+        text_embeddings = self.__embeddings.embed_documents([el["eventMessage"] for el in to_populate])
+        self.__driver.query(
             """
             UNWIND $data AS row
             MATCH (n:Event)
@@ -67,14 +78,14 @@ class Dataset:
 
         # Load the tests
         # Note: the test events should not have an embedding
-        self.driver.query(
+        self.__driver.query(
             "CALL n10s.rdf.import.inline($tests, 'Turtle')",
-            params={"tests": Path(config.tests_path).read_text()},
+            params={"tests": Path(self.__config.tests_path).read_text()},
         )
 
     def clear(self) -> None:
-        self.driver.query(f"DROP VECTOR INDEX {EVENTS_INDEX_NAME}")
-        self.driver.query(
+        self.__driver.query(f"DROP INDEX {EVENTS_INDEX_NAME} IF EXISTS")
+        self.__driver.query(
             """
             MATCH (n:Resource)
             WHERE n.uri STARTS WITH $examples_url OR n.uri STARTS WITH $tests_url
@@ -82,9 +93,16 @@ class Dataset:
             """,
             params={"examples_url": LOG_EXAMPLES_URL, "tests_url": LOG_TESTS_URL},
         )
+        # TODO: Make this more specific
+        self.__driver.query(
+            """
+            MATCH (n)
+            DETACH DELETE n
+            """,
+        )
 
     def tests(self) -> list[TestEvent]:
-        test_nodes = self.driver.query(
+        test_nodes = self.__driver.query(
             """
             MATCH (n:Event)
             WHERE n.uri STARTS WITH $log_tests_url
@@ -94,7 +112,7 @@ class Dataset:
         )
         tests = []
         for test in test_nodes:
-            ground_truth = self.driver.get_subgraph_from_node(test["uri"])
+            ground_truth = self.__driver.get_subgraph_from_node(test["uri"])
 
             source_node = next((node for node in ground_truth.nodes if node.type == "Source"), None)
             context = (
@@ -121,15 +139,15 @@ class Dataset:
             additional_properties = {"experiment_id": self.__config.experiment_id}
             if node.type == "Event":
                 # This will raise an exception if the LLM produces an Event node without a message property.
-                additional_properties["embedding"] = self.embeddings.embed_query(node.properties["eventMessage"])
+                additional_properties["embedding"] = self.__embeddings.embed_query(node.properties["eventMessage"])
 
-            self.driver.query(
+            self.__driver.query(
                 "CALL apoc.create.node([$type], $props) YIELD node",
                 params={"type": node.type, "props": {**node.properties, **additional_properties}},
             )
 
         for relationship in graph.relationships:
-            self.driver.query(
+            self.__driver.query(
                 """
                 MATCH (a {uri: $source_uri}), (b {uri: $target_uri})
                 CALL apoc.create.relationship(a, $type, {}, b) YIELD rel
@@ -154,10 +172,10 @@ class Dataset:
                 with the nodes they are connected to and their relationships.
 
         """
-        query_embeddings = self.embeddings.embed_query(event)
+        query_embeddings = self.__embeddings.embed_query(event)
 
         # Find k similar events using embeddings
-        similar_events = self.graph_store.query(
+        similar_events = self.__driver.query(
             """
             CALL db.index.vector.queryNodes($index, $k, $embedding)
             YIELD node, score
@@ -166,4 +184,4 @@ class Dataset:
             params={"index": EVENTS_INDEX_NAME, "k": k, "embedding": query_embeddings},
         )
 
-        return [self.driver.get_subgraph_from_node(similar_event["node_uri"]) for similar_event in similar_events]
+        return [self.__driver.get_subgraph_from_node(similar_event["node_uri"]) for similar_event in similar_events]

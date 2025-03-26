@@ -10,7 +10,7 @@ from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relations
 from pydantic import BaseModel, Field
 
 from lkgb.reports import ParserReport
-from lkgb.store import EventsStore
+from lkgb.store import Store
 from lkgb.tools import fetch_ip_address_info
 
 
@@ -64,7 +64,7 @@ class Parser:
     def __init__(
         self,
         parser_model: BaseLanguageModel,
-        store: EventsStore,
+        store: Store,
         prompt_build_graph: str,
         self_reflection_steps: int,
     ) -> "Parser":
@@ -81,7 +81,7 @@ class Parser:
 
         # Add context enrichment tools.
         # Note: not all models support tools + structured output
-        structured_model = parser_model.bind_tools([fetch_ip_address_info])
+        structured_model: BaseLanguageModel = parser_model.bind_tools([fetch_ip_address_info])
 
         # Add the graph structure to the structured output.
         # Also include raw output to retrieve eventual errors.
@@ -95,14 +95,13 @@ class Parser:
                 ),
                 ("placeholder", "{examples}"),
                 ("human", "Event: '{event}'\nContext: '{context}'"),
-                ("placeholder", "{messages}"),
             ],
         )
 
         self.chain = gen_graph_prompt | structured_model
 
     def __create_graph_structure(self) -> type[_EventGraph]:
-        ontology = self.store.ontology_graph()
+        ontology = self.store.ontology.graph()
 
         valid_node_types = [node.type for node in ontology.nodes]
         valid_relationships = [rel.type for rel in ontology.relationships]
@@ -124,7 +123,7 @@ class Parser:
 
         class _Node(BaseModel):
             id: str = Field(
-                description="Name or human-readable unique identifier. Must always begin with http://example.com/lkgb/runs",
+                description="Name or human-readable unique identifier.",
             )
             type: str = Field(
                 description=f"The type or label of the node. Available options are: {valid_node_types}",
@@ -154,14 +153,25 @@ class Parser:
         return DynamicEventGraph
 
     def _get_examples(self, event: str) -> list[BaseMessage]:
-        similar_event_graph = self.store.search_similar_events(event, k=1)
+        similar_event_graph = self.store.dataset.search_similar_events(event, k=1)
 
-        source_node = next((node for node in similar_event_graph[0].nodes if node.type == "Source"), None)
+        # Handle no similar events found, or no nodes in the graph.
+        # This should never happen, but if it does, return an empty list.
+        if (len(similar_event_graph) == 0) or (len(similar_event_graph[0].nodes) == 0):
+            return []
+
+        # The similar event may have no source node,
+        # or the node may have no sourceName or sourceDevice properties.
+        source_node = next((n for n in similar_event_graph[0].nodes if n.type == "Source"), None)
         context = (
-            {"source": source_node.properties["sourceName"], "device": source_node.properties["sourceDevice"]}
+            {
+                "source": source_node.properties.get("sourceName"),
+                "device": source_node.properties.get("sourceDevice"),
+            }
             if source_node
             else {}
         )
+
         return _get_example_group(event, context, similar_event_graph[0])
 
     def parse(self, event: str, context: dict) -> ParserReport:
@@ -184,23 +194,45 @@ class Parser:
 
         raw_schema = cast(dict, raw_schema)
 
-        if not raw_schema["parsed"]:
-            return report.failure(raw_schema["parsing_error"])
+        # Error handling for when the output is not parsed correctly
+        if not raw_schema.get("parsed"):
+            # If the tool has an exception, return it
+            if raw_schema.get("parsing_error"):
+                return report.failure(raw_schema["parsing_error"])
 
-        nodes_dict = {
-            node.id: Node(
-                id=node.id,
-                type=node.type,
-                properties={prop.type: prop.value for prop in node.properties} if node.properties else {},
-            )
-            for node in raw_schema["parsed"].nodes
-        }
-        relationships = []
-        for rel in raw_schema["parsed"].relationships:
-            source_node = nodes_dict[rel.source_id]
-            target_node = nodes_dict[rel.target_id]
+            # Otherwise try to return the output message from the llm
+            if raw_schema.get("out"):
+                # The output message should always be an AIMessage,
+                # but if it is not, return the raw output.
+                try:
+                    raw_out = cast(AIMessage, raw_schema["out"])
+                    return report.failure(raw_out.text)
+                except ValueError:
+                    return report.failure(raw_schema["out"])
 
-            relationships.append(Relationship(source=source_node, target=target_node, type=rel.type))
+            return report.failure("The output was not parsed correctly, and no error message was returned by the llm.")
+
+        # Construct the graph from the structured output.
+        try:
+            nodes_dict = {
+                node.id: Node(
+                    id=node.id,
+                    type=node.type,
+                    properties={prop.type: prop.value for prop in node.properties} if node.properties else {},
+                )
+                for node in raw_schema["parsed"].nodes
+            }
+            # The relationships may refer to a node that is not present in the list of nodes.
+            # For now, this just fails the parsing process. In the future a number of
+            # correction steps could be taken to try to recover from this situation.
+            relationships = []
+            for rel in raw_schema["parsed"].relationships:
+                source_node = nodes_dict[rel.source_id]
+                target_node = nodes_dict[rel.target_id]
+
+                relationships.append(Relationship(source=source_node, target=target_node, type=rel.type))
+        except KeyError as e:
+            return report.failure(e)
 
         graph = GraphDocument(nodes=list(nodes_dict.values()), relationships=relationships)
 

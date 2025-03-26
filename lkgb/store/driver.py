@@ -16,13 +16,17 @@ class Driver:
 
     def __init__(
         self,
-        url: str,
-        username: str,
-        password: str,
+        config: Config,
     ) -> "Driver":
-        self.graph_store = Neo4jGraph(url=url, username=username, password=password, sanitize=True)
+        self.__config = config
+        self.__graph_store = Neo4jGraph(
+            url=config.neo4j_url,
+            username=config.neo4j_username,
+            password=config.neo4j_password,
+            sanitize=True,
+        )
 
-    def initialize(self, config: Config) -> None:
+    def initialize(self) -> None:
         """Initialize the graph store and the vector index.
 
         The graph store is initialized with the ontology and the labelled examples.
@@ -32,7 +36,7 @@ class Driver:
         This is intentional, as the ontology and examples are expected to be static among experiments.
         """
         # Get the latest experiment node
-        latest_experiment = self.graph_store.query(
+        latest_experiment = self.__graph_store.query(
             """MATCH (n:Experiment)
             RETURN elementID(n) as id,
                 n.experiment_date_time as experimentDateTime,
@@ -43,37 +47,39 @@ class Driver:
             """,
         )
         if latest_experiment:
-            if latest_experiment[0]["ontologyHash"] != config.ontology_hash:
+            if latest_experiment[0]["ontologyHash"] != self.__config.ontology_hash():
                 msg = "The ontology has changed since the last experiment."
                 raise ValueError(msg)
 
-            if latest_experiment[0]["examplesHash"] != config.examples_hash:
+            if latest_experiment[0]["examplesHash"] != self.__config.examples_hash():
                 msg = "The examples have changed since the last experiment."
                 raise ValueError(msg)
 
-            self.graph_store.query(
+            self.__graph_store.query(
                 """
                 MATCH (m:Experiment)
                 WHERE elementID(m) = $id
                 CREATE (n:Experiment $details)-[:SUBSEQUENT]->(m)
                 """,
-                params={"details": config.dump(), "id": latest_experiment[0]["id"]},
+                params={"details": self.__config.dump(), "id": latest_experiment[0]["id"]},
             )
         else:
             # Create the experiment node
-            self.graph_store.query(
+            self.__graph_store.query(
                 """
                 CREATE (n:Experiment $details)
                 """,
-                params={"details": config.dump()},
+                params={"details": self.__config.dump()},
             )
 
-    def query(self, query: str, params: dict) -> list[dict[str, Any]]:
-        return self.graph_store.query(query, params)
+    def query(self, query: str, params: dict | None = None) -> list[dict[str, Any]]:
+        if params is None:
+            params = {}
+        return self.__graph_store.query(query, params)
 
     def clear(self) -> None:
         """Clear any experiment in the graph store."""
-        self.graph_store.query("MATCH (n:Experiment) DETACH DELETE n")
+        self.__graph_store.query("MATCH (n:Experiment) DETACH DELETE n")
 
     def get_subgraph_from_node(self, node_uri: str) -> GraphDocument:
         """Get the subgraph of a node in the store.
@@ -81,7 +87,7 @@ class Driver:
         The subgraph will contain all the nodes and relationships connected to the given node, even indirectly.
         """
         # Ugly but quite efficient. Also filters out the embedding property and the Resource label.
-        nodes_subgraphs = self.graph_store.query(
+        nodes_subgraphs = self.__graph_store.query(
             """
             MATCH (n {uri: $node_uri})
             CALL apoc.path.subgraphAll(n, {})

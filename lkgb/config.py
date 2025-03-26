@@ -29,6 +29,7 @@ class Config:
     Having a class for this is useful for easily exporting the configuration as a dictionary.
     """
 
+    # The date and time of the experiment.
     experiment_date_time = datetime.now(UTC)
 
     # Used to distinguish between the data in different experiments.
@@ -51,14 +52,16 @@ class Config:
     neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
     neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
 
-    # Whether to use the Ollama backend for parsing logs.
-    # The default is to use the HuggingFace backend instead.
+    # Whether to use the Ollama or HuggingFace backends for parsing logs.
+    # The default is to use Ollama.
     use_ollama_backend = bool(int(os.getenv("USE_OLLAMA_BACKEND", "1")))
 
-    # The huggingface hub api token to use for downloading models,
+    # The HuggingFace hub api token to use for downloading models,
     # generated from https://huggingface.co/docs/hub/security-tokens.
     # Only useful with the HuggingFace backend and when using private models.
     # For public models, this can be left unset.
+    # This variable is not used anywhere in the project,
+    # it's just to remind that it can be set in the environment.
     huggingfacehub_api_token = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
     # The model used to embed logs.
@@ -79,7 +82,7 @@ class Config:
 
     # The temperature of the LLM used to parse logs.
     # Must be between (strictly) 0 and 1.
-    parser_temperature = float(os.getenv("PARSER_TEMPERATURE", "0.7"))
+    parser_temperature = float(os.getenv("PARSER_TEMPERATURE", "0.5"))
 
     # The number of self-reflection steps to take.
     # Must be greater or equal than 0.
