@@ -14,7 +14,7 @@ from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.config import Config
 from lkgb.parser import Parser
 from lkgb.reports import RunSummary
-from lkgb.store import EventsStore
+from lkgb.store import Store
 
 config = Config()
 
@@ -24,25 +24,13 @@ logger = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
 
 # Set the backend
-if config.use_ollama_backend:
-    logger.info("Using Ollama backend.")
-    backend = OllamaBackend()
-else:
-    logger.info("Using HuggingFace backend.")
-    backend = HuggingFaceBackend()
+backend = OllamaBackend() if config.use_ollama_backend else HuggingFaceBackend()
 
 # Load the embeddings model
 embeddings = backend.get_embeddings(model=config.embeddings_model)
-logger.info("Embeddings model '%s' loaded.", config.embeddings_model)
 
 # Create the vector store
-store = EventsStore(
-    url=config.neo4j_url,
-    username=config.neo4j_username,
-    password=config.neo4j_password,
-    embeddings=embeddings,
-    experiment_id=config.experiment_id,
-)
+store = Store(config=config, embeddings=embeddings)
 
 app = typer.Typer()
 
@@ -55,16 +43,18 @@ def clear() -> None:
 
 @app.command()
 def parse() -> None:
+    logger.info("Using %s backend.", "Ollama" if config.use_ollama_backend else "HuggingFace")
     logger.info("Experiment ID: %s", config.experiment_id)
+    logger.info("Embeddings model: '%s'", config.embeddings_model)
 
     # Load the parser model
     llm = backend.get_parser_model(
         model=config.parser_model,
         temperature=config.parser_temperature,
     )
-    logger.info("Language model '%s' loaded.", config.parser_model)
+    logger.info("Language model: '%s'", config.parser_model)
 
-    store.initialize(config.dump())
+    store.initialize()
     logger.info("Store at %s initialized.", config.neo4j_url)
 
     test_events = store.get_tests()
@@ -73,6 +63,7 @@ def parse() -> None:
     parser = Parser(llm, store, config.prompt_build_graph, config.self_reflection_steps)
 
     reports = []
+    average_ged = 0
     for test in track(test_events, description="Parsing events"):
         report = parser.parse(test.event, test.context)
         reports.append(report)
