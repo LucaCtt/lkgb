@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import Any
 
 from langchain_core.embeddings import Embeddings
 from langchain_neo4j.graphs.graph_document import GraphDocument
 
 from lkgb.config import Config
 from lkgb.store.driver import Driver
+from lkgb.store.module import StoreModule
 
 EVENTS_INDEX_NAME = "eventMessageIndex"
 LOG_EXAMPLES_URL = "http://example.com/lkgb/logs/examples"
@@ -12,17 +14,25 @@ LOG_TESTS_URL = "http://example.com/lkgb/logs/tests"
 
 
 class TestEvent:
-    def __init__(self, event: str, context: dict, ground_truth: GraphDocument) -> "TestEvent":
+    """A test event with its context and ground truth."""
+
+    def __init__(self, event: str, context: dict, ground_truth: GraphDocument) -> None:
         self.event = event
         self.context = context
         self.ground_truth = ground_truth
 
 
-class Dataset:
-    def __init__(self, driver: Driver, embeddings: Embeddings, config: Config) -> "Dataset":
+class Dataset(StoreModule):
+    """The Dataset module is responsible for managing the event graphs in the store.
+
+    Includes the loading of the examples and tests, and the search for similar events.
+    """
+
+    def __init__(self, config: Config, driver: Driver, embeddings: Embeddings) -> None:
+        super().__init__(config)
+
         self.__driver = driver
         self.__embeddings = embeddings
-        self.__config = config
 
     def initialize(self) -> None:
         # Check if the examples are already loaded
@@ -38,7 +48,7 @@ class Dataset:
         # Load the examples
         self.__driver.query(
             "CALL n10s.rdf.import.inline($examples, 'Turtle')",
-            params={"examples": Path(self.__config.examples_path).read_text()},
+            params={"examples": Path(self._config.examples_path).read_text()},
         )
 
         # Create the vector index
@@ -80,7 +90,7 @@ class Dataset:
         # Note: the test events should not have an embedding
         self.__driver.query(
             "CALL n10s.rdf.import.inline($tests, 'Turtle')",
-            params={"tests": Path(self.__config.tests_path).read_text()},
+            params={"tests": Path(self._config.tests_path).read_text()},
         )
 
     def clear(self) -> None:
@@ -136,7 +146,7 @@ class Dataset:
         """
         for node in graph.nodes:
             # Add the experiment_id and (for the Event nodes) the embedding.
-            additional_properties = {"experiment_id": self.__config.experiment_id}
+            additional_properties: dict[str, Any] = {"experiment_id": self._config.experiment_id}
             if node.type == "Event":
                 # This will raise an exception if the LLM produces an Event node without a message property.
                 additional_properties["embedding"] = self.__embeddings.embed_query(node.properties["eventMessage"])

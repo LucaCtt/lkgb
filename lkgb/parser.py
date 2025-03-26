@@ -1,9 +1,10 @@
 """Parser module for parsing log events and constructing knowledge graphs."""
 
+from enum import Enum
 from typing import cast
 
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.language_models import BaseLanguageModel
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
@@ -63,11 +64,11 @@ class Parser:
 
     def __init__(
         self,
-        parser_model: BaseLanguageModel,
+        parser_model: BaseChatModel,
         store: Store,
         prompt_build_graph: str,
         self_reflection_steps: int,
-    ) -> "Parser":
+    ) -> None:
         self.history = ChatMessageHistory()
         self.store = store
         self.prompt_build_graph = prompt_build_graph
@@ -81,11 +82,11 @@ class Parser:
 
         # Add context enrichment tools.
         # Note: not all models support tools + structured output
-        structured_model: BaseLanguageModel = parser_model.bind_tools([fetch_ip_address_info])
+        structured_model = parser_model.bind_tools([fetch_ip_address_info])
 
         # Add the graph structure to the structured output.
         # Also include raw output to retrieve eventual errors.
-        structured_model = structured_model.with_structured_output(self.__create_graph_structure(), include_raw=True)
+        structured_model = structured_model.with_structured_output(self.__create_graph_structure(), include_raw=True)  # type: ignore[attr-defined]
 
         gen_graph_prompt = ChatPromptTemplate.from_messages(
             [
@@ -106,30 +107,30 @@ class Parser:
         valid_node_types = [node.type for node in ontology.nodes]
         valid_relationships = [rel.type for rel in ontology.relationships]
 
-        valid_properties = []
-        valid_properties_dict = {}
+        valid_properties: list[str] = []
+        valid_properties_dict: dict[str, list[str]] = {}
         for node in ontology.nodes:
             valid_properties = valid_properties + list(node.properties.keys())
             valid_properties_dict[node.type] = list(node.properties.keys())
 
         valid_properties_schema = [f"{node}:{props}" for node, props in valid_properties_dict.items()]
 
+        _NodeType = Enum("_NodeType", {node: node for node in valid_node_types}, type=str)  # noqa: N806
+        _PropertyType = Enum("_PropertyType", {prop: prop for prop in valid_properties}, type=str)  # noqa: N806
+        _RelationshipType = Enum("_RelationshipType", {rel: rel for rel in valid_relationships}, type=str)  # noqa: N806
+
         class _Property(BaseModel):
-            type: str = Field(
+            type: _PropertyType = Field(  # type: ignore[valid-type]
                 description=f"The type or label of the propertye. Available options are: {valid_properties}",
-                enum=valid_properties,
             )
             value: str | float = Field(description=("Extracted value."))
 
         class _Node(BaseModel):
-            id: str = Field(
-                description="Name or human-readable unique identifier.",
-            )
-            type: str = Field(
+            id: str = Field(description="Name or human-readable unique identifier.")
+            type: _NodeType = Field(  # type: ignore[valid-type]
                 description=f"The type or label of the node. Available options are: {valid_node_types}",
-                enum=valid_node_types,
             )
-            properties: list[_Property | None] = Field(None, description="List of node properties.")
+            properties: list[_Property] | None = Field(default=None, description="List of node properties.")
 
         _Node.__doc__ = (
             "Each node type has a specific set of available properties. "
@@ -139,9 +140,8 @@ class Parser:
         class _Relationship(BaseModel):
             source_id: str = Field(description="Name or human-readable unique identifier of source node.")
             target_id: str = Field(description="Name or human-readable unique identifier of source node.")
-            type: str = Field(
+            type: _RelationshipType = Field(  # type: ignore[valid-type]
                 description=f"The type or label of the relationship. Available types are: {valid_relationships}",
-                enum=valid_relationships,
             )
 
         class DynamicEventGraph(_EventGraph):
@@ -206,7 +206,7 @@ class Parser:
                 # but if it is not, return the raw output.
                 try:
                     raw_out = cast(AIMessage, raw_schema["out"])
-                    return report.failure(raw_out.text)
+                    return report.failure(raw_out.text())
                 except ValueError:
                     return report.failure(raw_schema["out"])
 

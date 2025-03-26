@@ -69,7 +69,7 @@ def fetch_ip_address_info(ip_address: IPvAnyAddress) -> IPAddressInfo | IPAddres
         return IPAddressInfo.model_validate_json(data)
 
     except requests.exceptions.RequestException as e:
-        if e.response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+        if e.response is not None and e.response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             return IPAddressError(error="Rate limit exceeded. Please do not send anymore requests for now.")
 
         return IPAddressError(error="An error occurred while fetching the data. Please try again later.")

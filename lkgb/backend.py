@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 
 from langchain_core.embeddings import Embeddings
-from langchain_core.runnables import Runnable
+from langchain_core.language_models import BaseChatModel
 
 
 class Backend(ABC):
@@ -26,7 +26,7 @@ class Backend(ABC):
         """
 
     @abstractmethod
-    def get_parser_model(self, model: str, temperature: float) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> BaseChatModel:
         """Retrieve a parser model based on the specified parameters.
 
         Args:
@@ -34,7 +34,7 @@ class Backend(ABC):
             temperature (float): The temperature parameter for the model, which controls the randomness of the output.
 
         Returns:
-            Runnable: An instance of a Runnable object that represents the parser model.
+            BaseChatModel: A parser model based on the specified parameters.
 
         """
 
@@ -51,7 +51,7 @@ class HuggingFaceBackend(Backend):
             msg = "Please install langchain-huggingface to use HuggingFaceBackend"
             raise ImportError(msg) from e
 
-    def get_parser_model(self, model: str, temperature: float) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> BaseChatModel:
         try:
             from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
 
@@ -81,7 +81,7 @@ class OllamaBackend(Backend):
             msg = "Please install langchain-ollama to use OllamaBackend"
             raise ImportError(msg) from e
 
-    def get_parser_model(self, model: str, temperature: float) -> Runnable:
+    def get_parser_model(self, model: str, temperature: float) -> BaseChatModel:
         try:
             from langchain_ollama.chat_models import ChatOllama  # type: ignore[import]
 

@@ -71,10 +71,13 @@ def parse() -> None:
 
         if report.error is not None:
             logger.warning("Event could not be parsed: %s", report.error)
-        else:
+        elif report.graph is not None:
             store.dataset.add_event_graph(report.graph)
             average_ged += graph_edit_distance(report.graph, test.ground_truth)
             logger.debug("GED: %f", graph_edit_distance(report.graph, test.ground_truth))
+        else:
+            logger.warning("Event was parsed but no graph was generated.")
+
     average_ged /= len(test_events)
 
     logger.info("Log parsing done.")
@@ -83,7 +86,7 @@ def parse() -> None:
 
     logger.info("Run summary:")
     logger.info("- Average parse time per event: %f seconds", summary.parse_time_average())
-    logger.info("- Success percentage: %f%%", summary.success_percentage()*100)
+    logger.info("- Success percentage: %f%%", summary.success_percentage() * 100)
     logger.info("- Average GED: %f", average_ged)
 
 

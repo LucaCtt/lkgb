@@ -5,9 +5,10 @@ from langchain_neo4j import Neo4jGraph
 from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relationship
 
 from lkgb.config import Config
+from lkgb.store.module import StoreModule
 
 
-class Driver:
+class Driver(StoreModule):
     """Graph store and vector index for the events knowledge graph.
 
     This class uses LangChain's Neo4jGraph api. It does not use the Neo4jVector api
@@ -17,8 +18,8 @@ class Driver:
     def __init__(
         self,
         config: Config,
-    ) -> "Driver":
-        self.__config = config
+    ) -> None:
+        super().__init__(config)
         self.__graph_store = Neo4jGraph(
             url=config.neo4j_url,
             username=config.neo4j_username,
@@ -47,11 +48,11 @@ class Driver:
             """,
         )
         if latest_experiment:
-            if latest_experiment[0]["ontologyHash"] != self.__config.ontology_hash():
+            if latest_experiment[0]["ontologyHash"] != self._config.ontology_hash():
                 msg = "The ontology has changed since the last experiment."
                 raise ValueError(msg)
 
-            if latest_experiment[0]["examplesHash"] != self.__config.examples_hash():
+            if latest_experiment[0]["examplesHash"] != self._config.examples_hash():
                 msg = "The examples have changed since the last experiment."
                 raise ValueError(msg)
 
@@ -61,7 +62,7 @@ class Driver:
                 WHERE elementID(m) = $id
                 CREATE (n:Experiment $details)-[:SUBSEQUENT]->(m)
                 """,
-                params={"details": self.__config.dump(), "id": latest_experiment[0]["id"]},
+                params={"details": self._config.dump(), "id": latest_experiment[0]["id"]},
             )
         else:
             # Create the experiment node
@@ -69,7 +70,7 @@ class Driver:
                 """
                 CREATE (n:Experiment $details)
                 """,
-                params={"details": self.__config.dump()},
+                params={"details": self._config.dump()},
             )
 
     def query(self, query: str, params: dict | None = None) -> list[dict[str, Any]]:

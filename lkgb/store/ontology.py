@@ -4,16 +4,23 @@ from langchain_neo4j.graphs.graph_document import GraphDocument, Node, Relations
 
 from lkgb.config import Config
 from lkgb.store.driver import Driver
+from lkgb.store.module import StoreModule
 
 LOG_ONTOLOGY_URL = "http://example.com/lkgb/logs/dictionary"
 TIME_ONTOLOGY_URL = "http://www.w3.org/2006/time"
 N10S_CONSTRAINT_NAME = "n10s_unique_uri"
 
 
-class Ontology:
-    def __init__(self, driver: Driver, config: Config) -> "Ontology":
+class Ontology(StoreModule):
+    """Ontology store module.
+
+    This module is responsible for initializing the ontology store and
+    providing access to the ontology.
+    """
+
+    def __init__(self, config: Config, driver: Driver) -> None:
+        super().__init__(config)
         self.__driver = driver
-        self.__config = config
 
     def initialize(self) -> None:
         # Check if the neosemantics configuration is present,
@@ -30,7 +37,7 @@ class Ontology:
         # Load the ontologies
         self.__driver.query(
             "CALL n10s.onto.import.inline($ontology, 'Turtle')",
-            params={"ontology": Path(self.__config.ontology_path).read_text()},
+            params={"ontology": Path(self._config.ontology_path).read_text()},
         )
         self.__driver.query(
             "CALL n10s.onto.import.fetch($url, 'Turtle')",

@@ -13,12 +13,12 @@ class ParserReport:
 
     def __init__(
         self,
-    ) -> "ParserReport":
+    ) -> None:
         self.start_dt = datetime.now(tz=UTC)
         self.error: Exception | str | None = None
         self.graph: GraphDocument | None = None
 
-    def failure(self, error: Exception) -> "ParserReport":
+    def failure(self, error: Exception | str) -> "ParserReport":
         """Mark the end of the parsing process by setting the end datetime.
 
         Args:
@@ -64,7 +64,7 @@ class ParserReport:
 class RunSummary:
     """A class to summarize the results of multiple parser reports."""
 
-    def __init__(self, parser_reports: list[ParserReport]) -> "RunSummary":
+    def __init__(self, parser_reports: list[ParserReport]) -> None:
         self.parser_reports = parser_reports
 
     def parse_time_average(self) -> float:
