@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from langchain_core.embeddings import Embeddings
 from langchain_neo4j.graphs.graph_document import GraphDocument
 
@@ -11,15 +13,6 @@ from lkgb.store.module import StoreModule
 EVENTS_INDEX_NAME = "eventMessageIndex"
 LOG_EXAMPLES_URL = "http://example.com/lkgb/logs/examples"
 LOG_TESTS_URL = "http://example.com/lkgb/logs/tests"
-
-
-class TestEvent:
-    """A test event with its context and ground truth."""
-
-    def __init__(self, event: str, context: dict, ground_truth: GraphDocument) -> None:
-        self.event = event
-        self.context = context
-        self.ground_truth = ground_truth
 
 
 class Dataset(StoreModule):
@@ -111,7 +104,7 @@ class Dataset(StoreModule):
             """,
         )
 
-    def tests(self) -> list[TestEvent]:
+    def tests(self) -> list[tuple[str, dict, GraphDocument]]:
         test_nodes = self.__driver.query(
             """
             MATCH (n:Event)
@@ -130,7 +123,7 @@ class Dataset(StoreModule):
                 if source_node
                 else {}
             )
-            tests.append(TestEvent(event=test["message"], context=context, ground_truth=ground_truth))
+            tests.append((test["message"], context, ground_truth))
 
         return tests
 
@@ -170,12 +163,21 @@ class Dataset(StoreModule):
                 },
             )
 
-    def search_similar_events(self, event: str, k: int = 5) -> list[GraphDocument]:
+    def events_mmr_search(
+        self,
+        event: str,
+        k: int = 3,
+        fetch_k: int = 20,
+        lambda_mult: float = 0.5,
+    ) -> list[tuple[str, GraphDocument]]:
         """Search for similar events in the store.
 
         Args:
             event (str): The event message to search for.
-            k (int): The number of similar events to search for.
+            k (int): The number of events to return.
+            fetch_k (int): The number of events to pass to the MMR algorithm.
+            lambda_mult (float): number between 0 and 1, that determines the trade-off between relevance and diversity.
+                0 means maximum diversity, 1 means maximum relevance.
 
         Returns:
             list[GraphDocument]: The list of graphs of similar events,
@@ -190,12 +192,25 @@ class Dataset(StoreModule):
             """
             CALL db.index.vector.queryNodes($index, $k, $embedding)
             YIELD node, score
-            RETURN node.uri AS node_uri, score
+            RETURN node.eventMessage as eventMessage, node.uri AS node_uri, node.embedding AS embedding, score
             """,
-            params={"index": EVENTS_INDEX_NAME, "k": k, "embedding": query_embeddings},
+            params={"index": EVENTS_INDEX_NAME, "k": fetch_k, "embedding": query_embeddings},
         )
 
+        embeddings = [similar_event["embedding"] for similar_event in similar_events]
+
+        selected_indices = maximal_marginal_relevance(
+            query_embedding=np.array(query_embeddings),
+            embedding_list=embeddings,
+            k=k,
+            lambda_mult=lambda_mult,
+        )
+        selected_events = [similar_events[i] for i in selected_indices]
+
         return [
-            self.__driver.get_subgraph_from_node(similar_event["node_uri"], ["experimentId"])
-            for similar_event in similar_events
+            (
+                similar_event["eventMessage"],
+                self.__driver.get_subgraph_from_node(similar_event["node_uri"], ["experimentId"]),
+            )
+            for similar_event in selected_events
         ]

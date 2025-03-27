@@ -24,7 +24,6 @@ class Driver(StoreModule):
             url=config.neo4j_url,
             username=config.neo4j_username,
             password=config.neo4j_password,
-            sanitize=True,
         )
 
     def initialize(self) -> None:

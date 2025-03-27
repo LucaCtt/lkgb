@@ -13,8 +13,7 @@ from rich.progress import track
 from lkgb.accuracy import graph_edit_distance
 from lkgb.backend import HuggingFaceBackend, OllamaBackend
 from lkgb.config import Config
-from lkgb.parser import Parser
-from lkgb.reports import RunSummary
+from lkgb.parser import Parser, RunSummary
 from lkgb.store import Store
 
 config = Config()
@@ -65,16 +64,16 @@ def parse() -> None:
 
     reports = []
     average_ged = 0
-    for test in track(test_events, description="Parsing events"):
-        report = parser.parse(test.event, test.context)
+    for event, context, graph in track(test_events, description="Parsing events"):
+        report = parser.parse(event, context)
         reports.append(report)
 
         if report.error is not None:
             logger.warning("Event could not be parsed: %s", report.error)
         elif report.graph is not None:
             store.dataset.add_event_graph(report.graph)
-            average_ged += graph_edit_distance(report.graph, test.ground_truth)
-            logger.debug("GED: %f", graph_edit_distance(report.graph, test.ground_truth))
+            average_ged += graph_edit_distance(report.graph, graph)
+            logger.debug("GED: %f", graph_edit_distance(report.graph, graph))
         else:
             logger.warning("Event was parsed but no graph was generated.")
 

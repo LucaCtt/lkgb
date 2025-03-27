@@ -313,7 +313,6 @@
 
 :event-10 rdf:type log:Event;
   log:eventMessage "5030:signal-handler (1642682292) Received SIGTERM scheduling shutdown...";
-  log:hasTimeStamp :timestamp-10;
   log:hasApplication :application-10;
   log:hasAddress :address-10;
   log:hasSource :source-10.
