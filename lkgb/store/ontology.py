@@ -73,7 +73,7 @@ class Ontology(StoreModule):
         nodes_with_props = self.__driver.query(
             """
             MATCH (c:Class)
-            WHERE c.uri STARTS WITH $log_ontology_url OR c.uri = $time_instant_url
+            WHERE c.uri STARTS WITH $log_ontology_url OR c.uri = $time_instant_url OR c.uri = $time_datetime_url
             OPTIONAL MATCH (c)<-[:DOMAIN]-(p:Property)
             WITH c.name AS class, c.uri as uri, COLLECT([p.name, p.comment]) AS pairs
             RETURN class, uri, apoc.map.fromPairs(pairs) AS properties
@@ -81,6 +81,7 @@ class Ontology(StoreModule):
             params={
                 "log_ontology_url": LOG_ONTOLOGY_URL,
                 "time_instant_url": f"{TIME_ONTOLOGY_URL}#Instant",
+                "time_datetime_url": f"{TIME_ONTOLOGY_URL}#GeneralDateTimeDescription",
             },
         )
         nodes_dict = {
@@ -90,12 +91,24 @@ class Ontology(StoreModule):
         triples = self.__driver.query(
             """
             MATCH (n:Class)<-[:DOMAIN]-(r:Relationship)-[:RANGE]->(m:Class)
-            WHERE n.uri STARTS WITH $log_ontology_url
-            AND m.uri STARTS WITH $log_ontology_url
-            AND r.uri STARTS WITH $log_ontology_url
+            WHERE
+            (
+                n.uri STARTS WITH $log_ontology_url
+                AND m.uri STARTS WITH $log_ontology_url
+                AND r.uri STARTS WITH $log_ontology_url
+            )
+            OR
+            (
+                n.uri = $time_instant_url
+                AND m.uri = $time_datetime_url
+            )
             RETURN n.uri AS subject_uri, r.name AS predicate, m.uri AS object_uri
             """,
-            params={"log_ontology_url": LOG_ONTOLOGY_URL},
+            params={
+                "log_ontology_url": LOG_ONTOLOGY_URL,
+                "time_instant_url": f"{TIME_ONTOLOGY_URL}#Instant",
+                "time_datetime_url": f"{TIME_ONTOLOGY_URL}#GeneralDateTimeDescription",
+            },
         )
         relationships = [
             Relationship(

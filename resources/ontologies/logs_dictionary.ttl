@@ -127,7 +127,7 @@
   rdfs:comment "Relation between an Event and a User mentioned in it.".
 
 ###  http://example.com/lkgb/logs/dictionary#hasTimeStamp
-:hasTimestamp rdf:type owl:ObjectProperty;
+:hasTimeStamp rdf:type owl:ObjectProperty;
   rdfs:domain :Event;
   rdfs:range :TimeStamp;
   rdfs:comment "Relation between an Event and its timestamp.".

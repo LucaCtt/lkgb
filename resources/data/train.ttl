@@ -15,8 +15,8 @@
 :timestamp-1 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-25"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-25T06:17:01"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-1.
 
 :source-1 rdf:type log:Source;
@@ -28,7 +28,7 @@
   log:userName "root".
 
 :process-1 rdf:type log:Process;
-  log:pid 16314.
+  log:processPID 16314.
 
 :application-1 rdf:type log:Application;
   log:applicationName "CRON";
@@ -53,8 +53,8 @@
 :timestamp-2 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-20"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-20T13:16:23"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-2.
 
 :application-2 rdf:type log:Application;
@@ -82,12 +82,12 @@
 :timestamp-3 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-20"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-20T13:47:21"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-3.
 
 :process-3 rdf:type log:Process;
-  log:pid 3326.
+  log:processPID 3326.
 
 :application-3 rdf:type log:Application;
   log:applicationName "dnsmasq";
@@ -120,8 +120,8 @@
 :timestamp-4 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-23"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-23T08:06:19"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-4.
 
 :application-4 rdf:type log:Application;
@@ -153,12 +153,12 @@
 :timestamp-5 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-22"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-22T19:12:09"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-5.
 
 :process-5 rdf:type log:Process;
-  log:pid 1.
+  log:processPID 1.
 
 :application-5 rdf:type log:Application;
   log:applicationName "systemd";
@@ -186,8 +186,8 @@
 :timestamp-6 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-23"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-23T06:42:05"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-6.
 
 :source-6 rdf:type log:Source;
@@ -211,12 +211,12 @@
 :timestamp-7 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-25"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-25T06:57:57"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-7.
 
 :process-7 rdf:type log:Process;
-  log:pid 1993.
+  log:processPID 1993.
 
 :application-7 rdf:type log:Application;
   log:applicationName "systemd";
@@ -244,8 +244,8 @@
 :timestamp-8 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-20"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-20T11:12:22"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-8.
 
 :application-8 rdf:type log:Application;
@@ -273,12 +273,12 @@
 :timestamp-9 rdf:type log:TimeStamp;
   time:inXSDDate "2022-01-24"^^xsd:date;
   time:inXSDDateTimeStamp "2022-01-24T22:48:53"^^xsd:dateTime;
-  time:inXSDGYear "2022"^^xsd:gYear;
-  time:inXSDGYearMonth "2022-01"^^xsd:gYearMonth;
+  time:inXSDgYear "2022"^^xsd:gYear;
+  time:inXSDgYearMonth "2022-01"^^xsd:gYearMonth;
   time:inDateTime :datetime-9.
 
 :process-9 rdf:type log:Process;
-  log:pid 30824.
+  log:processPID 30824.
 
 :application-9 rdf:type log:Application;
   log:applicationName "systemd-timesyncd";

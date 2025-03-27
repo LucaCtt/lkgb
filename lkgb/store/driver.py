@@ -82,11 +82,16 @@ class Driver(StoreModule):
         """Clear any experiment in the graph store."""
         self.__graph_store.query("MATCH (n:Experiment) DETACH DELETE n")
 
-    def get_subgraph_from_node(self, node_uri: str) -> GraphDocument:
+    def get_subgraph_from_node(self, node_uri: str, props_to_remove: list[str] | None = None) -> GraphDocument:
         """Get the subgraph of a node in the store.
 
         The subgraph will contain all the nodes and relationships connected to the given node, even indirectly.
         """
+        if props_to_remove is None:
+            props_to_remove = []
+
+        props_to_remove = [*props_to_remove, "embedding"]
+
         # Ugly but quite efficient. Also filters out the embedding property and the Resource label.
         nodes_subgraphs = self.__graph_store.query(
             """
@@ -95,17 +100,17 @@ class Driver(StoreModule):
             YIELD nodes, relationships
             RETURN
             [node IN nodes | {
-                uri: node.uri,
-                type: HEAD([label IN LABELS(node) WHERE label <> 'Resource']),
-                properties: PROPERTIES(node)
+            uri: node.uri,
+            type: HEAD([label IN LABELS(node) WHERE label <> 'Resource']),
+            properties: apoc.map.removeKeys(PROPERTIES(node), $props_to_remove)
             }] AS nodes,
             [rel IN relationships | {
-                source: STARTNODE(rel).uri,
-                target: ENDNODE(rel).uri,
-                type: TYPE(rel)
+            source: STARTNODE(rel).uri,
+            target: ENDNODE(rel).uri,
+            type: TYPE(rel)
             }] AS relationships
             """,
-            params={"node_uri": node_uri},
+            params={"node_uri": node_uri, "props_to_remove": props_to_remove},
         )
 
         if not nodes_subgraphs:

@@ -1,5 +1,6 @@
 """Parser module for parsing log events and constructing knowledge graphs."""
 
+import uuid
 from enum import Enum
 from typing import cast
 
@@ -20,7 +21,7 @@ class _EventGraph(BaseModel):
     relationships: list
 
 
-def _get_example_group(event: str, context: dict, graph: GraphDocument) -> list[BaseMessage]:
+def _similar_message_group(event: str, context: dict, graph: GraphDocument) -> list[BaseMessage]:
     nodes = [
         {
             "id": node.id,
@@ -106,8 +107,9 @@ class Parser:
 
         valid_node_types = [node.type for node in ontology.nodes]
         valid_relationships = [rel.type for rel in ontology.relationships]
+        valid_triples = [(rel.source.type, rel.type, rel.target.type) for rel in ontology.relationships]
 
-        valid_properties: list[str] = []
+        valid_properties: list[str] = ["uri"]
         valid_properties_dict: dict[str, list[str]] = {}
         for node in ontology.nodes:
             valid_properties = valid_properties + list(node.properties.keys())
@@ -121,7 +123,7 @@ class Parser:
 
         class _Property(BaseModel):
             type: _PropertyType = Field(  # type: ignore[valid-type]
-                description=f"The type or label of the propertye. Available options are: {valid_properties}",
+                description=f"The type or label of the property. Available options are: {valid_properties}",
             )
             value: str | float = Field(description=("Extracted value."))
 
@@ -134,7 +136,7 @@ class Parser:
 
         _Node.__doc__ = (
             "Each node type has a specific set of available properties. "
-            f"The available properties for each node type are : {valid_properties_schema} "
+            f"The available properties for each node type are: {valid_properties_schema} "
         )
 
         class _Relationship(BaseModel):
@@ -144,6 +146,12 @@ class Parser:
                 description=f"The type or label of the relationship. Available types are: {valid_relationships}",
             )
 
+        _Relationship.__doc__ = (
+            "Each relationship type has a specific source and target node type. "
+            "The available relationships specified in the format "
+            f"(source type, relationship type, target type) are: {valid_triples} "
+        )
+
         class DynamicEventGraph(_EventGraph):
             nodes: list[_Node] = Field(description="List of nodes.")
             relationships: list[_Relationship] = Field(
@@ -152,7 +160,7 @@ class Parser:
 
         return DynamicEventGraph
 
-    def _get_examples(self, event: str) -> list[BaseMessage]:
+    def _get_similar(self, event: str) -> list[BaseMessage]:
         similar_event_graph = self.store.dataset.search_similar_events(event, k=1)
 
         # Handle no similar events found, or no nodes in the graph.
@@ -162,17 +170,25 @@ class Parser:
 
         # The similar event may have no source node,
         # or the node may have no sourceName or sourceDevice properties.
-        source_node = next((n for n in similar_event_graph[0].nodes if n.type == "Source"), None)
-        context = (
-            {
-                "source": source_node.properties.get("sourceName"),
-                "device": source_node.properties.get("sourceDevice"),
-            }
-            if source_node
-            else {}
-        )
+        context = {}
 
-        return _get_example_group(event, context, similar_event_graph[0])
+        # This is to differentiate the ids of each example,
+        # to prevent the llm from generating the same ids at different parse calls.
+        curr_id = str(uuid.uuid4())[:8]
+
+        for node in similar_event_graph[0].nodes:
+            if node.type == "Source":
+                context["source"] = node.properties.get("sourceName")
+                context["device"] = node.properties.get("sourceDevice")
+
+            if isinstance(node.id, str):
+                node.id = node.id.replace("examples", f"run/{curr_id}")
+
+            uri = node.properties.get("uri")
+            if uri:
+                node.properties["uri"] = uri.replace("examples", f"run/{curr_id}")
+
+        return _similar_message_group(event, context, similar_event_graph[0])
 
     def parse(self, event: str, context: dict) -> ParserReport:
         """Parse the given event and construct a knowledge graph.
@@ -188,7 +204,7 @@ class Parser:
         report = ParserReport()
 
         raw_schema = self.chain.invoke(
-            {"event": event, "context": context, "examples": self._get_examples(event)},
+            {"event": event, "context": context, "examples": self._get_similar(event)},
             {"configurable": {"session_id": "unused"}},
         )
 

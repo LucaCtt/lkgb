@@ -146,7 +146,7 @@ class Dataset(StoreModule):
         """
         for node in graph.nodes:
             # Add the experiment_id and (for the Event nodes) the embedding.
-            additional_properties: dict[str, Any] = {"experiment_id": self._config.experiment_id}
+            additional_properties: dict[str, Any] = {"experimentId": self._config.experiment_id}
             if node.type == "Event":
                 # This will raise an exception if the LLM produces an Event node without a message property.
                 additional_properties["embedding"] = self.__embeddings.embed_query(node.properties["eventMessage"])
@@ -184,6 +184,7 @@ class Dataset(StoreModule):
         """
         query_embeddings = self.__embeddings.embed_query(event)
 
+        # TODO: fix: this also retrieves stuff with different experimentId
         # Find k similar events using embeddings
         similar_events = self.__driver.query(
             """
@@ -194,4 +195,7 @@ class Dataset(StoreModule):
             params={"index": EVENTS_INDEX_NAME, "k": k, "embedding": query_embeddings},
         )
 
-        return [self.__driver.get_subgraph_from_node(similar_event["node_uri"]) for similar_event in similar_events]
+        return [
+            self.__driver.get_subgraph_from_node(similar_event["node_uri"], ["experimentId"])
+            for similar_event in similar_events
+        ]
