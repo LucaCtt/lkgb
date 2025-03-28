@@ -21,7 +21,7 @@ config = Config()
 # Set up logging format
 logging.basicConfig(format="%(message)s", handlers=[RichHandler(omit_repeated_times=False)])
 logger = logging.getLogger("rich")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Set the backend
 backend = OllamaBackend() if config.use_ollama_backend else HuggingFaceBackend()
@@ -65,6 +65,8 @@ def parse() -> None:
     reports = []
     average_ged = 0
     for event, context, graph in track(test_events, description="Parsing events"):
+        logger.debug("Parsing event: '%s'", event)
+
         report = parser.parse(event, context)
         reports.append(report)
 

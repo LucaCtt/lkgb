@@ -1,5 +1,6 @@
 """Parser module for parsing log events and constructing knowledge graphs."""
 
+import logging
 import uuid
 from typing import cast
 
@@ -7,11 +8,14 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_neo4j.graphs.graph_document import GraphDocument
+from pydantic import ValidationError
 
 from lkgb.parser.models import EventGraph, build_dynamic_model
 from lkgb.parser.reports import ParserReport
 from lkgb.store import Store
 from lkgb.tools import fetch_ip_address_info
+
+logger = logging.getLogger("rich")
 
 
 def _get_message_group(event: str, graph: GraphDocument, context: dict) -> list[BaseMessage]:
@@ -39,7 +43,7 @@ def _get_message_group(event: str, graph: GraphDocument, context: dict) -> list[
         HumanMessage(f"Event: '{event}'\nContext: {context}", name="example_user"),
         AIMessage(
             "",
-            name="example_assistant",
+            id=f"run_{uuid.uuid4()!s}",
             tool_calls=[
                 {
                     "name": "DynamicEventGraph",
@@ -91,6 +95,7 @@ class Parser:
                 ("system", self.prompt_build_graph),
                 ("placeholder", "{examples}"),
                 ("human", "Event: '{event}'\nContext: '{context}'"),
+                ("placeholder", "{corrections}"),
             ],
         )
 
@@ -126,43 +131,73 @@ class Parser:
         """
         report = ParserReport()
 
-        raw_schema = self.chain.invoke(
-            {
-                "event": event,
-                "context": context,
-                "examples": self._get_examples(event),
-            },
-        )
+        # Retrieve examples once for all the self-reflection steps
+        examples = self._get_examples(event)
 
-        raw_schema = cast(dict, raw_schema)
+        corrections = []
 
-        # Error handling for when the output is not parsed correctly
-        if not raw_schema.get("parsed"):
-            # If the tool has an exception, return it
-            if raw_schema.get("parsing_error"):
-                return report.failure(raw_schema["parsing_error"])
+        # Using self_reflection_steps + 1 to account for the initial attempt
+        for current_step in range(self.self_reflection_steps + 1):
+            logger.debug("Self-reflection step %d", current_step)
 
-            # Otherwise try to return the output message from the llm
-            if raw_schema.get("out"):
-                # The output message should always be an AIMessage,
-                # but if it is not, return the raw output.
+            raw_schema = self.chain.invoke(
+                {
+                    "event": event,
+                    "context": context,
+                    "examples": examples,
+                    "corrections": corrections,
+                },
+            )
+
+            raw_schema = cast(dict, raw_schema)
+
+            # Error handling for when the output is not parsed correctly
+            if not raw_schema.get("parsed"):
+                logger.debug("LLM output not parsed correctly. Checking for corrections.")
+
                 try:
-                    raw_out = cast(AIMessage, raw_schema["out"])
-                    return report.failure(raw_out.text())
-                except ValueError:
-                    return report.failure(raw_schema["out"])
+                    llm_answer = cast(AIMessage, raw_schema["raw"])
+                    # Create a new AIMessage with the same content and tool_calls,
+                    # but without all the unnecessary stuff
+                    corrections.append(
+                        AIMessage(llm_answer.content, id=llm_answer.id, tool_calls=llm_answer.tool_calls),
+                    )
+                except KeyError:
+                    logger.debug("No raw LLM output found.")
 
-            return report.failure("The output was not parsed correctly, and no error message was returned by the llm.")
+                    # If the LLM gives no output, retry again with no corrections
+                    continue
 
-        # Construct the graph from the structured output.
-        try:
+                msg = "Your answer does not respect the expected format. Please try again."
+
+                # If there are parsing errors, use them as corrections
+                if raw_schema.get("parsing_error"):
+                    parsing_error = cast(ValidationError, raw_schema["parsing_error"])
+                    errors = [
+                        {
+                            "location": ".".join(map(str, err.get("loc"))),
+                            "message": err.get("msg"),
+                            "invalid_input": err.get("input"),
+                        }
+                        for err in parsing_error.errors()
+                    ]
+
+                    logger.debug("Parsing errors found: %s", errors)
+                    msg += f" Fix these errors, without modifying anything else: {errors}"
+
+                corrections.append(HumanMessage(msg))
+
+                continue
+
             output_graph: GraphDocument = raw_schema["parsed"].graph()
 
+            # Manually reassign ids, I don't trust those generated by the LLM
             for node in output_graph.nodes:
                 node_id = f"http://example.com/lkgb/logs/run/{uuid.uuid4()}"
                 node.id = node_id
                 node.properties["uri"] = node_id
 
+            logger.debug("Graph constructed successfully.")
             return report.success(output_graph)
-        except ValueError as e:
-            return report.failure(e)
+
+        return report.failure("No valid output was produced within the self-reflection steps.")
